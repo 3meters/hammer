@@ -9,6 +9,8 @@ import (
 var configFileName string
 var helpMe bool 
 
+
+// Set command line flags
 func init() {
   flag.StringVar(&configFileName, "config", "config.json", "config file")
 	flag.StringVar(&configFileName, "c", "config.json", "config file")
