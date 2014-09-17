@@ -1,10 +1,9 @@
 {
-  "Host": "localhost:6643",
+  "Host": "https://localhost:6643/v1/",
   "UserName": "test1@3meters.com",
   "Password": "foobar",
   "UserId": "",
   "Session": "",
-  "Cred": "",
   "Hammers": 10,
   "Seconds": 60
 }
