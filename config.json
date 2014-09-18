@@ -5,5 +5,15 @@
   "UserId": "",
   "Session": "",
   "Hammers": 10,
-  "Seconds": 60
+  "Seconds": 60,
+  "Requests": [
+    {
+      "Path": ""
+    },
+    {
+      "Method": "post",
+      "Path": "",
+      "Body": ""
+    }
+  ]
 }
