@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -24,8 +25,9 @@ type Request struct {
 
 type Config struct {
 	Host			string
-	UserName	string
+	Email			string
 	Password	string
+	InstallId	string
 	UserId		string
 	Session		string
 	Cred			string
@@ -33,6 +35,7 @@ type Config struct {
 	Seconds		int
 	Requests	[]Request
 }
+
 
 // Set command line flags
 func init() {
@@ -55,18 +58,20 @@ func main() {
 
 	content, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		fmt.Print("Could not read config file "+configFileName, err)
-		os.Exit(1)
+		fail("Could not read config file " + configFileName, err)
 	}
 
-	var conf Config
-	err = json.Unmarshal(content, &conf)
+	config := Config {
+		Hammers: 1,
+		Seconds: 10,
+	}
+
+	err = json.Unmarshal(content, &config)
 	if err != nil {
-		fmt.Println("Error parsing config file:", err)
-		os.Exit(1)
+		fail("Config file not valid JSON", err)
 	}
 
-	fmt.Println("Config: ", conf)
+	fmt.Println("Config: ", config)
 
 	// Configure a transport that accepts self-singed certificates
 	// Similar to curl --insecure
@@ -77,19 +82,85 @@ func main() {
 	client := &http.Client{Transport: tr}
 
 	// Make sure we can reach the host
-	res, err := client.Get(conf.Host)
-	if err != nil {
-		fmt.Println(err)
+	if config.Host == "" {
+		fmt.Println("Host is required")
 		os.Exit(1)
+	}
+	res, err := client.Get(config.Host)
+	if err != nil {
+		fail("Error contacting host " + config.Host, err)
 	}
 	defer res.Body.Close()
 
-	// Assume the host returns JSON and pretty-print it to the console
-	// ? how does json.Indent fail?
+	// Make sure the host returns JSON and pretty-print it to the console
 	body, err := ioutil.ReadAll(res.Body)
-	var indented bytes.Buffer
-	json.Indent(&indented, body, "", "  ")
+	if err != nil {
+		fail("Could not read response", err)
+	}
+	_ = printJson(body) 
+	
+	err = authenticate(client, &config)
+	if err != nil {
+		fail("Authentication failed", err)
+	}
+	run(client, &config)
+
+}
+
+
+// printJson: prettyPrint JSON to stdout
+func printJson(data []byte) error {
+  var indented bytes.Buffer
+	err := json.Indent(&indented, data, "", "  ")
+	if err != nil {
+		fail("Invalid JSON", err)
+	}
 	fmt.Printf("%s", indented)
 	fmt.Println()
+	return nil
+}
 
+
+// Authenticate the user specified in config.json
+func authenticate(client *http.Client, config *Config) error {
+	if config.Cred != "" {
+		return nil
+	}
+	if config.Session != "" && config.UserId != "" {
+		config.Cred = "user=" + config.UserId + "&session=" + config.Session
+		return nil
+	}
+	if config.Email == "" || config.Password == "" || config.InstallId == "" {
+		return errors.New("No means to authenticate")
+	}
+
+	// Attempt to sign in 
+	url := config.Host + "/auth/signin?user[email]=" + config.Email +
+		"&user[password]=" + config.Password + "&installId=" + config.InstallId
+	fmt.Println("url", url)
+	res, err := client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return errors.New("Failed")
+	}
+	return nil
+}
+
+func run(client *http.Client, config *Config) {
+	fmt.Println("Requests:")
+	for _, req := range config.Requests {
+		fmt.Println(req)
+	}
+}
+
+func fail(msg string, err error) {
+	if err != nil {
+		msg += ": " + err.Error()
+	}
+	fmt.Println("Error:", msg) 
+	os.Exit(1)
 }

@@ -1,7 +1,8 @@
 {
-  "Host": "https://localhost:6643/v1/",
-  "UserName": "test1@3meters.com",
+  "Host": "https://localhost:6643/v1",
+  "Email": "test1@3meters.com",
   "Password": "foobar",
+  "InstallId": "1234",
   "UserId": "",
   "Session": "",
   "Hammers": 10,
