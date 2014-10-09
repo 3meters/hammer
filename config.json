@@ -1,5 +1,5 @@
 {
-  "Host": "https://localhost:6643/v1",
+  "Host": "https://localhost:6643/v1/",
   "Email": "test1@3meters.com",
   "Password": "foobar",
   "InstallId": "1234",

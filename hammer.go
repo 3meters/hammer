@@ -18,24 +18,23 @@ var configFileName string
 var helpMe bool
 
 type Request struct {
-	Method		string
-	Path			string
-	Body			string
+	Method string
+	Path   string
+	Body   string
 }
 
 type Config struct {
-	Host			string
-	Email			string
-	Password	string
-	InstallId	string
-	UserId		string
-	Session		string
-	Cred			string
-	Hammers		int
-	Seconds		int
-	Requests	[]Request
+	Host      string
+	Email     string
+	Password  string
+	InstallId string
+	UserId    string
+	Session   string
+	Cred      string
+	Hammers   int
+	Seconds   int
+	Requests  []Request
 }
-
 
 // Set command line flags
 func init() {
@@ -58,10 +57,10 @@ func main() {
 
 	content, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		fail("Could not read config file " + configFileName, err)
+		fail("Could not read config file "+configFileName, err)
 	}
 
-	config := Config {
+	config := Config{
 		Hammers: 1,
 		Seconds: 10,
 	}
@@ -88,7 +87,7 @@ func main() {
 	}
 	res, err := client.Get(config.Host)
 	if err != nil {
-		fail("Error contacting host " + config.Host, err)
+		fail("Could not connect to server", err)
 	}
 	defer res.Body.Close()
 
@@ -97,8 +96,8 @@ func main() {
 	if err != nil {
 		fail("Could not read response", err)
 	}
-	_ = printJson(body) 
-	
+	_ = printJson(body)
+
 	err = authenticate(client, &config)
 	if err != nil {
 		fail("Authentication failed", err)
@@ -107,10 +106,9 @@ func main() {
 
 }
 
-
 // printJson: prettyPrint JSON to stdout
 func printJson(data []byte) error {
-  var indented bytes.Buffer
+	var indented bytes.Buffer
 	err := json.Indent(&indented, data, "", "  ")
 	if err != nil {
 		fail("Invalid JSON", err)
@@ -119,7 +117,6 @@ func printJson(data []byte) error {
 	fmt.Println()
 	return nil
 }
-
 
 // Authenticate the user specified in config.json
 func authenticate(client *http.Client, config *Config) error {
@@ -134,7 +131,7 @@ func authenticate(client *http.Client, config *Config) error {
 		return errors.New("No means to authenticate")
 	}
 
-	// Attempt to sign in 
+	// Attempt to sign in
 	url := config.Host + "/auth/signin?user[email]=" + config.Email +
 		"&user[password]=" + config.Password + "&installId=" + config.InstallId
 	fmt.Println("url", url)
@@ -161,6 +158,6 @@ func fail(msg string, err error) {
 	if err != nil {
 		msg += ": " + err.Error()
 	}
-	fmt.Println("Error:", msg) 
+	fmt.Println("Error:", msg)
 	os.Exit(1)
 }
