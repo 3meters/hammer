@@ -5,10 +5,12 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -18,22 +20,24 @@ var configFileName string
 var helpMe bool
 
 type Request struct {
-	Method string
-	Path   string
-	Body   string
+	method string
+	path   string
+	body   string
 }
 
+type Requests []Request
+
 type Config struct {
-	Host      string
-	Email     string
-	Password  string
-	InstallId string
-	UserId    string
-	Session   string
-	Cred      string
-	Hammers   int
-	Seconds   int
-	Requests  []Request
+	Host        string
+	Email       string
+	Password    string
+	InstallId   string
+	UserId      string
+	Session     string
+	Cred        string
+	Hammers     int
+	Seconds     int
+	RequestPath string
 }
 
 // Set command line flags
@@ -61,8 +65,9 @@ func main() {
 	}
 
 	config := Config{
-		Hammers: 1,
-		Seconds: 10,
+		Hammers:     1,
+		Seconds:     10,
+		RequestPath: "request.log",
 	}
 
 	err = json.Unmarshal(content, &config)
@@ -70,7 +75,20 @@ func main() {
 		fail("Config file not valid JSON", err)
 	}
 
-	fmt.Println("Config: ", config)
+	fmt.Println("Config:")
+	_ = printJson(content)
+
+	// Open and parse the request log that will be fired at the target
+	requestFile, err := os.Open(config.RequestPath)
+	if err != nil {
+		fail("Could not read request file "+config.RequestPath, err)
+	}
+	defer requestFile.Close()
+
+	requests, err := parseRequestLog(requestFile)
+	if err != nil {
+		fail("Error parsing request log", err)
+	}
 
 	// Configure a transport that accepts self-singed certificates
 	// Similar to curl --insecure
@@ -98,12 +116,48 @@ func main() {
 	}
 	_ = printJson(body)
 
-	err = authenticate(client, &config)
-	if err != nil {
-		fail("Authentication failed", err)
-	}
-	run(client, &config)
+	/*
+		err = authenticate(client, &config)
+		if err != nil {
+			fail("Authentication failed", err)
+		}
+	*/
+	run(requests)
 
+}
+
+// parseRequestLog: parse our modified csv log format
+func parseRequestLog(file *os.File) (requests []Request, err error) {
+
+	const max = 10000
+	lineCount := 0
+	reader := csv.NewReader(file)
+	reader.Comma = 0 // ignore commas, one field per line
+	reader.FieldsPerRecord = 1
+	reader.LazyQuotes = true
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+
+		lineCount++
+		if lineCount > max {
+			return requests, errors.New("Request log exceeded max of " + string(max))
+		}
+
+		recordBytes := []byte(record[0])
+		request := Request{}
+		err = json.Unmarshal(recordBytes, &request)
+		if err != nil {
+			return nil, err
+		}
+		requests = append(requests, request)
+	}
+	return requests, nil
 }
 
 // printJson: prettyPrint JSON to stdout
@@ -147,13 +201,17 @@ func authenticate(client *http.Client, config *Config) error {
 	return nil
 }
 
-func run(client *http.Client, config *Config) {
+// run
+// func run(client *http.Client, config *Config, requests *Requests) {
+func run(requests Requests) {
 	fmt.Println("Requests:")
-	for _, req := range config.Requests {
-		fmt.Println(req)
+	for _, req := range requests {
+		fmt.Printf("%#v", req)
+		fmt.Println()
 	}
 }
 
+// fail
 func fail(msg string, err error) {
 	if err != nil {
 		msg += ": " + err.Error()
