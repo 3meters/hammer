@@ -20,9 +20,9 @@ var configFileName string
 var helpMe bool
 
 type Request struct {
-	method string
-	path   string
-	body   string
+	Method string
+	Url    string
+	Body   json.RawMessage
 }
 
 type Requests []Request
@@ -149,6 +149,7 @@ func parseRequestLog(file *os.File) (requests []Request, err error) {
 			return requests, errors.New("Request log exceeded max of " + string(max))
 		}
 
+		fmt.Println(record[0])
 		recordBytes := []byte(record[0])
 		request := Request{}
 		err = json.Unmarshal(recordBytes, &request)
@@ -167,8 +168,7 @@ func printJson(data []byte) error {
 	if err != nil {
 		fail("Invalid JSON", err)
 	}
-	fmt.Printf("%s", indented)
-	fmt.Println()
+	fmt.Printf("%s\n", indented)
 	return nil
 }
 
@@ -206,7 +206,16 @@ func authenticate(client *http.Client, config *Config) error {
 func run(requests Requests) {
 	fmt.Println("Requests:")
 	for _, req := range requests {
-		fmt.Printf("%#v", req)
+		fmt.Printf("%s\n", req.Method)
+		fmt.Printf("%s\n", req.Url)
+		bodyBytes, err := req.Body.MarshalJSON()
+		if err != nil {
+			fail("Could not Marshal Body", err)
+		}
+		body := string(bodyBytes)
+		if body != "" {
+			fmt.Printf("%s\n", body)
+		}
 		fmt.Println()
 	}
 }
