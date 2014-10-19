@@ -1,44 +1,44 @@
-{"Method":"post","Url":"/v1/auth/signin","Body":{"name":"Test User 861473","email":"test861473@3meters.com","password":"foobar","installId":"123456"}}
-{"Method":"post","Url":"/v1/user/create","Body":{"data":{"name":"Test User 861473","email":"test861473@3meters.com","password":"foobar"},"secret":"larissa","installId":"123456"}}
-{"Method":"post","Url":"/v1/auth/signin","Body":{"name":"Test Admin User","email":"admin","password":"admin","installId":"123456"}}
-{"Method":"post","Url":"/v1/user/create","Body":{"data":{"_id":"us.tarzan4655","name":"tarzan4655","email":"tarzan4655@3meters.com","password":"foobar"},"secret":"larissa","installId":"4655"}}
-{"Method":"post","Url":"/v1/user/create","Body":{"data":{"_id":"us.jane4655","name":"jane4655","email":"jane4655@3meters.com","password":"foobar"},"secret":"larissa","installId":"4655"}}
-{"Method":"post","Url":"/v1/user/create","Body":{"data":{"_id":"us.mary4655","name":"mary4655","email":"mary4655@3meters.com","password":"foobar"},"secret":"larissa","installId":"4655"}}
-{"Method":"post","Url":"/v1/data/places?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"data":{"_id":"pl.river4655","name":"River4655"}}}
-{"Method":"post","Url":"/v1/data/places?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"data":{"_id":"pl.treehouse4655","name":"Treehouse4655","visibility":"private"}}}
-{"Method":"post","Url":"/v1/data/places?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"data":{"_id":"pl.janehouse4655","name":"Janehouse4655","visibility":"private"}}}
-{"Method":"post","Url":"/v1/data/links?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"data":{"_to":"pl.river4655","_from":"us.tarzan4655","type":"watch"}}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entity":{"schema":"message","_id":"me.tarzanToRiver4655","description":"Good water, bad crocs"},"links":[{"_to":"pl.river4655","type":"content"}]}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entity":{"schema":"message","_id":"me.tarzanToTreehouse4655","description":"Check out my hammock"},"links":[{"_to":"pl.treehouse4655","type":"content"}]}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"entity":{"schema":"message","_id":"me.janeToJanehouse4655","description":"Checkout my bed"},"links":[{"_to":"pl.janehouse4655","type":"content"}]}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entity":{"schema":"message","_id":"me.tarzanToJanehouse4655","description":"What is bed?"},"links":[{"_to":"pl.janehouse4655","type":"content"}]}}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToRiver4655"}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToRiver4655?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b"}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToRiver4655?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToTreehouse4655?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b"}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToTreehouse4655?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"post","Url":"/v1/do/getEntitiesForEntity","Body":{"entityId":"pl.river4655","cursor":{"linkTypes":["watch"],"direction":"in"}}}
-{"Method":"post","Url":"/v1/do/getEntitiesForEntity","Body":{"entityId":"pl.river4655","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entity":{"_id":"me.tarzanInvitesHimselfOver4655","schema":"message","description":"I would like to see Janehouse"},"links":[{"_id":"li.toJaneFromTarzanSelfInvite4655","_to":"us.jane4655","type":"share"},{"_id":"li.toJanehouseFromTarzanSelfInvite4655","_to":"pl.janehouse4655","type":"share"}]}}
-{"Method":"get","Url":"/v1/data/messages/me.tarzanInvitesHimselfOver4655?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b"}
-{"Method":"get","Url":"/v1/data/links/li.toJaneFromTarzanSelfInvite4655?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b"}
-{"Method":"get","Url":"/v1/data/links/li.toJanehouseFromTarzanSelfInvite4655?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b"}
-{"Method":"post","Url":"/v1/data/links?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"data":{"_from":"us.tarzan4655","_to":"pl.janehouse4655","type":"watch"}}}
-{"Method":"post","Url":"/v1/do/getEntitiesForEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entityId":"pl.janehouse4655","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"Method":"post","Url":"/v1/data/links/li.141018.41290.027.885156?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"data":{"enabled":true}}}
-{"Method":"post","Url":"/v1/data/links/li.141018.41290.027.885156?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"data":{"enabled":true}}}
-{"Method":"post","Url":"/v1/do/getEntitiesForEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entityId":"pl.janehouse4655","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.tarzan4655&session=ef389477cb88fa3897e776c2138dbce685aa1f6b","Body":{"entity":{"_id":"me.tarzanInvite4655","schema":"message","type":"root","description":"Check out my treehouse"},"links":[{"_id":"li.toTreehouseFromTarzanInvite4655","_to":"pl.treehouse4655","type":"share"},{"_id":"li.toJaneFromTarzanInvite4655","_to":"us.jane4655","type":"share"}]}}
-{"Method":"get","Url":"/v1/data/links/li.toJaneFromTarzanInvite4655"}
-{"Method":"get","Url":"/v1/data/links/li.toTreehouseFromTarzanInvite4655"}
-{"Method":"post","Url":"/v1/do/getMessages?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"entityId":"us.jane4655","cursor":{"limit":50,"linkTypes":["share"],"schemas":["message"],"skip":0,"sort":{"modifiedDate":-1}},"links":{"shortcuts":true,"active":[{"schema":"message","type":"share","direction":"in"}]},"log":true}}
-{"Method":"get","Url":"/v1/do/getEntities?entityIds[0]=me.tarzanInvite4655&user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"get","Url":"/v1/do/getEntities?entityIds[0]=me.tarzanInvitesHimselfOver4655&user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"post","Url":"/v1/do/insertLink?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"toId":"pl.treehouse4655","fromId":"us.jane4655","type":"watch"}}
-{"Method":"get","Url":"/v1/find/messages?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"get","Url":"/v1/find/messages/me.tarzanToTreehouse4655?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"entity":{"schema":"comment","_id":"co.janeCommentOnTarzanMsg4655","description":"Trust me, you will like bed"},"links":[{"_to":"me.tarzanToTreehouse4655","type":"content"}]}}
-{"Method":"post","Url":"/v1/do/insertEntity?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"entity":{"schema":"message","_id":"me.janeToTreehouse4655","description":"Hmm, maybe hammock is ok afterall..."},"links":[{"_to":"pl.treehouse4655","type":"content"}]}}
-{"Method":"post","Url":"/v1/data/messages/me.janeToTreehouse4655?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd","Body":{"data":{"description":"On second thought, hammock sucks"}}}
-{"Method":"delete","Url":"/v1/data/messages/me.janeToTreehouse4655?user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
-{"Method":"get","Url":"/v1/data/links?query[_from]=me.janeToTreehouse4655&query[_to]=pl.treehouse4655&user=us.jane4655&session=195ed8757fc7dccf920839ef0130e572e293e5fd"}
+{"method":"post","url":"/v1/auth/signin","body":{"name":"Test User 515698","email":"test515698@3meters.com","password":"foobar","installId":"123456"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"name":"Test User 515698","email":"test515698@3meters.com","password":"foobar"},"secret":"larissa","installId":"123456"}}
+{"method":"post","url":"/v1/auth/signin","body":{"name":"Test Admin User","email":"admin","password":"admin","installId":"123456"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.tarzan4123","name":"tarzan4123","email":"tarzan4123@3meters.com","password":"foobar"},"secret":"larissa","installId":"4123"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.jane4123","name":"jane4123","email":"jane4123@3meters.com","password":"foobar"},"secret":"larissa","installId":"4123"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.mary4123","name":"mary4123","email":"mary4123@3meters.com","password":"foobar"},"secret":"larissa","installId":"4123"}}
+{"method":"post","url":"/v1/data/places?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"data":{"_id":"pl.river4123","name":"River4123"}}}
+{"method":"post","url":"/v1/data/places?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"data":{"_id":"pl.treehouse4123","name":"Treehouse4123","visibility":"private"}}}
+{"method":"post","url":"/v1/data/places?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"data":{"_id":"pl.janehouse4123","name":"Janehouse4123","visibility":"private"}}}
+{"method":"post","url":"/v1/data/links?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"data":{"_to":"pl.river4123","_from":"us.tarzan4123","type":"watch"}}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entity":{"schema":"message","_id":"me.tarzanToRiver4123","description":"Good water, bad crocs"},"links":[{"_to":"pl.river4123","type":"content"}]}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entity":{"schema":"message","_id":"me.tarzanToTreehouse4123","description":"Check out my hammock"},"links":[{"_to":"pl.treehouse4123","type":"content"}]}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"entity":{"schema":"message","_id":"me.janeToJanehouse4123","description":"Checkout my bed"},"links":[{"_to":"pl.janehouse4123","type":"content"}]}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entity":{"schema":"message","_id":"me.tarzanToJanehouse4123","description":"What is bed?"},"links":[{"_to":"pl.janehouse4123","type":"content"}]}}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver4123"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver4123?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver4123?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse4123?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse4123?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.river4123","cursor":{"linkTypes":["watch"],"direction":"in"}}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.river4123","cursor":{"linkTypes":["content"],"direction":"in"}}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entity":{"_id":"me.tarzanInvitesHimselfOver4123","schema":"message","description":"I would like to see Janehouse"},"links":[{"_id":"li.toJaneFromTarzanSelfInvite4123","_to":"us.jane4123","type":"share"},{"_id":"li.toJanehouseFromTarzanSelfInvite4123","_to":"pl.janehouse4123","type":"share"}]}}
+{"method":"get","url":"/v1/data/messages/me.tarzanInvitesHimselfOver4123?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9"}
+{"method":"get","url":"/v1/data/links/li.toJaneFromTarzanSelfInvite4123?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9"}
+{"method":"get","url":"/v1/data/links/li.toJanehouseFromTarzanSelfInvite4123?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9"}
+{"method":"post","url":"/v1/data/links?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"data":{"_from":"us.tarzan4123","_to":"pl.janehouse4123","type":"watch"}}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entityId":"pl.janehouse4123","cursor":{"linkTypes":["content"],"direction":"in"}}}
+{"method":"post","url":"/v1/data/links/li.141018.63259.337.105737?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"data":{"enabled":true}}}
+{"method":"post","url":"/v1/data/links/li.141018.63259.337.105737?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"data":{"enabled":true}}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entityId":"pl.janehouse4123","cursor":{"linkTypes":["content"],"direction":"in"}}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.tarzan4123&session=42f74167411fcf563572f6ad8e30a423789d2bc9","body":{"entity":{"_id":"me.tarzanInvite4123","schema":"message","type":"root","description":"Check out my treehouse"},"links":[{"_id":"li.toTreehouseFromTarzanInvite4123","_to":"pl.treehouse4123","type":"share"},{"_id":"li.toJaneFromTarzanInvite4123","_to":"us.jane4123","type":"share"}]}}
+{"method":"get","url":"/v1/data/links/li.toJaneFromTarzanInvite4123"}
+{"method":"get","url":"/v1/data/links/li.toTreehouseFromTarzanInvite4123"}
+{"method":"post","url":"/v1/do/getMessages?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"entityId":"us.jane4123","cursor":{"limit":50,"linkTypes":["share"],"schemas":["message"],"skip":0,"sort":{"modifiedDate":-1}},"links":{"shortcuts":true,"active":[{"schema":"message","type":"share","direction":"in"}]},"log":true}}
+{"method":"get","url":"/v1/do/getEntities?entityIds[0]=me.tarzanInvite4123&user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"get","url":"/v1/do/getEntities?entityIds[0]=me.tarzanInvitesHimselfOver4123&user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"post","url":"/v1/do/insertLink?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"toId":"pl.treehouse4123","fromId":"us.jane4123","type":"watch"}}
+{"method":"get","url":"/v1/find/messages?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse4123?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"post","url":"/v1/do/insertEntity?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"entity":{"schema":"comment","_id":"co.janeCommentOnTarzanMsg4123","description":"Trust me, you will like bed"},"links":[{"_to":"me.tarzanToTreehouse4123","type":"content"}]}}
+{"method":"post","url":"/v1/do/insertEntity?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"entity":{"schema":"message","_id":"me.janeToTreehouse4123","description":"Hmm, maybe hammock is ok afterall..."},"links":[{"_to":"pl.treehouse4123","type":"content"}]}}
+{"method":"post","url":"/v1/data/messages/me.janeToTreehouse4123?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff","body":{"data":{"description":"On second thought, hammock sucks"}}}
+{"method":"delete","url":"/v1/data/messages/me.janeToTreehouse4123?user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}
+{"method":"get","url":"/v1/data/links?query[_from]=me.janeToTreehouse4123&query[_to]=pl.treehouse4123&user=us.jane4123&session=102daeb4a7bf59ca1729ea65cfbd3ec11f74eeff"}

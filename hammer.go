@@ -20,9 +20,9 @@ var configFileName string
 var helpMe bool
 
 type Request struct {
-	Method string
-	Url    string
-	Body   json.RawMessage
+	Method string          `json:"method"`
+	Url    string          `json:"url"`
+	Body   json.RawMessage `json:"body,omitempty"`
 }
 
 type Requests []Request
@@ -208,12 +208,12 @@ func run(requests Requests) {
 	for _, req := range requests {
 		fmt.Printf("%s\n", req.Method)
 		fmt.Printf("%s\n", req.Url)
-		bodyBytes, err := req.Body.MarshalJSON()
-		if err != nil {
-			fail("Could not Marshal Body", err)
-		}
-		body := string(bodyBytes)
-		if body != "" {
+		if req.Body != nil {
+			bodyBytes, err := req.Body.MarshalJSON()
+			if err != nil {
+				fail("Could not Marshal Body", err)
+			}
+			body := string(bodyBytes)
 			fmt.Printf("%s\n", body)
 		}
 		fmt.Println()
