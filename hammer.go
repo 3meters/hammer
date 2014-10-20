@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 )
@@ -116,12 +117,10 @@ func main() {
 	}
 	_ = printJson(body)
 
-	/*
-		err = authenticate(client, &config)
-		if err != nil {
-			fail("Authentication failed", err)
-		}
-	*/
+	err = authenticate(client, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
 	run(requests)
 
 }
@@ -186,8 +185,8 @@ func authenticate(client *http.Client, config *Config) error {
 	}
 
 	// Attempt to sign in
-	url := config.Host + "/auth/signin?user[email]=" + config.Email +
-		"&user[password]=" + config.Password + "&installId=" + config.InstallId
+	url := config.Host + "auth/signin?email=" + config.Email +
+		"&password=" + config.Password + "&installId=" + config.InstallId
 	fmt.Println("url", url)
 	res, err := client.Get(url)
 	if err != nil {
@@ -195,9 +194,29 @@ func authenticate(client *http.Client, config *Config) error {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != 200 {
-		return errors.New("Failed")
+	type Session struct {
+		UserId    string `json:"_owner"`
+		SessionId string `json:"key"`
 	}
+
+	type ParsedBody struct {
+		Session Session `json:"session"`
+	}
+
+	parsedBody := ParsedBody{}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if res.StatusCode != 200 {
+		return errors.New("Authentication failed")
+	}
+
+	err = json.Unmarshal(body, &parsedBody)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%#v\n", parsedBody)
+	os.Exit(0)
 	return nil
 }
 
