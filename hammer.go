@@ -15,11 +15,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var configFileName string
 var helpMe bool
-var cred string
 
 type Request struct {
 	Method string          `json:"method"`
@@ -62,7 +62,7 @@ func main() {
 
 	content, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		fail("Could not read config file "+configFileName, err)
+		log.Fatal(err)
 	}
 
 	config := Config{
@@ -73,7 +73,7 @@ func main() {
 
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		fail("Config file not valid JSON", err)
+		log.Fatal("Config file not valid JSON: ", err)
 	}
 
 	fmt.Println("Config:")
@@ -82,13 +82,13 @@ func main() {
 	// Open and parse the request log that will be fired at the target
 	requestFile, err := os.Open(config.RequestPath)
 	if err != nil {
-		fail("Could not read request file "+config.RequestPath, err)
+		log.Fatalln("Could not read request file "+config.RequestPath, err)
 	}
 	defer requestFile.Close()
 
 	requests, err := parseRequestLog(requestFile)
 	if err != nil {
-		fail("Error parsing request log", err)
+		log.Fatal("Error parsing "+config.RequestPath+": ", err)
 	}
 
 	// Configure a transport that accepts self-singed certificates
@@ -101,27 +101,26 @@ func main() {
 
 	// Make sure we can reach the host
 	if config.Host == "" {
-		fmt.Println("Host is required")
-		os.Exit(1)
+		log.Fatalln("config.Host is required")
 	}
 	res, err := client.Get(config.Host)
 	if err != nil {
-		fail("Could not connect to server", err)
+		log.Fatal(err)
 	}
 	defer res.Body.Close()
 
 	// Make sure the host returns JSON and pretty-print it to the console
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fail("Could not read response", err)
+		log.Fatal(err)
 	}
 	_ = printJson(body)
 
-	err = authenticate(client, &config)
-	if err != nil {
-		log.Fatal(err)
+	cred, authErr := authenticate(client, &config)
+	if authErr != nil {
+		log.Fatal(authErr)
 	}
-	run(requests)
+	run(requests, cred)
 
 }
 
@@ -138,7 +137,7 @@ func parseRequestLog(file *os.File) (requests []Request, err error) {
 	for {
 		record, err := reader.Read()
 		if err == io.EOF {
-			break
+			break // done
 		} else if err != nil {
 			return nil, err
 		}
@@ -148,7 +147,7 @@ func parseRequestLog(file *os.File) (requests []Request, err error) {
 			return requests, errors.New("Request log exceeded max of " + string(max))
 		}
 
-		fmt.Println(record[0])
+		// fmt.Println(record[0])
 		recordBytes := []byte(record[0])
 		request := Request{}
 		err = json.Unmarshal(recordBytes, &request)
@@ -157,6 +156,7 @@ func parseRequestLog(file *os.File) (requests []Request, err error) {
 		}
 		requests = append(requests, request)
 	}
+	fmt.Printf("%s%v%s\n", "Parsed ", lineCount, " requests Ok")
 	return requests, nil
 }
 
@@ -165,24 +165,24 @@ func printJson(data []byte) error {
 	var indented bytes.Buffer
 	err := json.Indent(&indented, data, "", "  ")
 	if err != nil {
-		fail("Invalid JSON", err)
+		return err
 	}
-	fmt.Printf("%s\n", indented)
+	fmt.Printf("%v\n", indented.String())
 	return nil
 }
 
 // Authenticate the user specified in config.json
-func authenticate(client *http.Client, config *Config) error {
+func authenticate(client *http.Client, config *Config) (string, error) {
 
 	// Attempt to sign in
 	url := config.Host + "auth/signin"
 
-	reqBody, _ := json.Marshal(config.Signin)
+	reqBodyBytes, _ := json.Marshal(config.Signin)
 
-	fmt.Println("url", url)
-	res, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody)) // why is NewBuffere needed?
+	fmt.Println("signin url:", url)
+	res, err := client.Post(url, "application/json", bytes.NewReader(reqBodyBytes))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer res.Body.Close()
 
@@ -191,51 +191,39 @@ func authenticate(client *http.Client, config *Config) error {
 		SessionId string `json:"key"`
 	}
 
-	type ParsedBody struct {
+	type Body struct {
 		Session Session `json:"session"`
 	}
 
-	parsedBody := ParsedBody{}
+	body := Body{}
 
-	body, err := ioutil.ReadAll(res.Body)
+	bodyBytes, err := ioutil.ReadAll(res.Body)
 	if res.StatusCode != 200 {
-		return errors.New("Authentication failed")
+		return "", errors.New("Authentication failed with status " + string(res.StatusCode))
 	}
 
-	err = json.Unmarshal(body, &parsedBody)
+	err = json.Unmarshal(bodyBytes, &body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	fmt.Printf("%#v\n", parsedBody)
-	os.Exit(0)
-	return nil
+	fmt.Printf("%s\n%#v\n", "Signin response: ", body)
+	credentials := "user=" + body.Session.UserId +
+		"&session=" + body.Session.SessionId
+
+	return credentials, nil
 }
 
 // run
 // func run(client *http.Client, config *Config, requests *Requests) {
-func run(requests Requests) {
-	fmt.Println("Requests:")
+func run(requests Requests, cred string) {
 	for _, req := range requests {
-		fmt.Printf("%s\n", req.Method)
-		fmt.Printf("%s\n", req.Url)
-		if req.Body != nil {
-			bodyBytes, err := req.Body.MarshalJSON()
-			if err != nil {
-				fail("Could not Marshal Body", err)
-			}
-			body := string(bodyBytes)
-			fmt.Printf("%s\n", body)
+		delim := "?"
+		if strings.Contains(req.Url, "?") {
+			delim = "&"
 		}
-		fmt.Println()
+		req.Url += delim + cred
+		fmt.Println(req.Url)
+		os.Exit(0)
 	}
-}
-
-// fail
-func fail(msg string, err error) {
-	if err != nil {
-		msg += ": " + err.Error()
-	}
-	fmt.Println("Error:", msg)
-	os.Exit(1)
 }
