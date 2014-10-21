@@ -13,8 +13,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -219,6 +222,13 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 
 // run: fire requests at the target with config credentials
 func run(client *http.Client, config *Config, requests Requests, cred string) {
+
+	seedRangeFloat := math.Pow10(len(config.Seed))
+	seedRangeInt := int64(seedRangeFloat)
+	newSeedInt := rand.Int63n(seedRangeInt)
+	newSeed := strconv.FormatInt(newSeedInt, 10)
+	fmt.Println("newSeed", newSeed)
+
 	for _, logReq := range requests {
 		delim := "?"
 		if strings.Contains(logReq.Url, "?") {
@@ -226,7 +236,14 @@ func run(client *http.Client, config *Config, requests Requests, cred string) {
 		}
 		method := strings.ToUpper(logReq.Method)
 		url := config.Host + logReq.Url + delim + cred
-		req, reqErr := http.NewRequest(method, url, bytes.NewReader(logReq.Body))
+
+		// Replace the seed in urls with our newly generated seed
+		url = strings.Replace(url, config.Seed, newSeed, -1)
+
+		// Same for the body
+		reqBody := bytes.Replace(logReq.Body, []byte(config.Seed), []byte(newSeed), -1)
+
+		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
 		if reqErr != nil {
 			log.Fatal(reqErr)
 		}
