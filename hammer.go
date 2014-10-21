@@ -19,6 +19,7 @@ import (
 
 var configFileName string
 var helpMe bool
+var cred string
 
 type Request struct {
 	Method string          `json:"method"`
@@ -29,13 +30,12 @@ type Request struct {
 type Requests []Request
 
 type Config struct {
-	Host        string
-	Email       string
-	Password    string
-	InstallId   string
-	UserId      string
-	Session     string
-	Cred        string
+	Host   string
+	Signin struct {
+		Email     string `json:"email"`
+		Password  string `json:"password"`
+		InstallId string `json:"installId"`
+	}
 	Hammers     int
 	Seconds     int
 	RequestPath string
@@ -173,22 +173,14 @@ func printJson(data []byte) error {
 
 // Authenticate the user specified in config.json
 func authenticate(client *http.Client, config *Config) error {
-	if config.Cred != "" {
-		return nil
-	}
-	if config.Session != "" && config.UserId != "" {
-		config.Cred = "user=" + config.UserId + "&session=" + config.Session
-		return nil
-	}
-	if config.Email == "" || config.Password == "" || config.InstallId == "" {
-		return errors.New("No means to authenticate")
-	}
 
 	// Attempt to sign in
-	url := config.Host + "auth/signin?email=" + config.Email +
-		"&password=" + config.Password + "&installId=" + config.InstallId
+	url := config.Host + "auth/signin"
+
+	reqBody, _ := json.Marshal(config.Signin)
+
 	fmt.Println("url", url)
-	res, err := client.Get(url)
+	res, err := client.Post(url, "application/json", bytes.NewBuffer(reqBody)) // why is NewBuffere needed?
 	if err != nil {
 		return err
 	}
