@@ -1,10 +1,11 @@
 {
-  "Host": "https://localhost:6644/v1/",
+  "Host": "https://localhost:6644",
   "Signin": {
     "Email": "admin",
     "Password": "admin",
     "InstallId": "1"
   },
+  "Seed": "1234567",
   "Hammers": 10,
   "Seconds": 60,
   "RequestPath": "request.log"

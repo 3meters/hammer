@@ -18,6 +18,8 @@ import (
 	"strings"
 )
 
+const contentJson = "application/json"
+
 var configFileName string
 var helpMe bool
 
@@ -36,6 +38,7 @@ type Config struct {
 		Password  string `json:"password"`
 		InstallId string `json:"installId"`
 	}
+	Seed        string
 	Hammers     int
 	Seconds     int
 	RequestPath string
@@ -120,7 +123,7 @@ func main() {
 	if authErr != nil {
 		log.Fatal(authErr)
 	}
-	run(requests, cred)
+	run(client, &config, requests, cred)
 
 }
 
@@ -167,7 +170,7 @@ func printJson(data []byte) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%v\n", indented.String())
+	fmt.Printf("%v", indented.String())
 	return nil
 }
 
@@ -175,12 +178,12 @@ func printJson(data []byte) error {
 func authenticate(client *http.Client, config *Config) (string, error) {
 
 	// Attempt to sign in
-	url := config.Host + "auth/signin"
+	url := config.Host + "/v1/auth/signin"
 
 	reqBodyBytes, _ := json.Marshal(config.Signin)
 
 	fmt.Println("signin url:", url)
-	res, err := client.Post(url, "application/json", bytes.NewReader(reqBodyBytes))
+	res, err := client.Post(url, contentJson, bytes.NewReader(reqBodyBytes))
 	if err != nil {
 		return "", err
 	}
@@ -214,16 +217,27 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 	return credentials, nil
 }
 
-// run
-// func run(client *http.Client, config *Config, requests *Requests) {
-func run(requests Requests, cred string) {
-	for _, req := range requests {
+// run: fire requests at the target with config credentials
+func run(client *http.Client, config *Config, requests Requests, cred string) {
+	for _, logReq := range requests {
 		delim := "?"
-		if strings.Contains(req.Url, "?") {
+		if strings.Contains(logReq.Url, "?") {
 			delim = "&"
 		}
-		req.Url += delim + cred
-		fmt.Println(req.Url)
-		os.Exit(0)
+		method := strings.ToUpper(logReq.Method)
+		url := config.Host + logReq.Url + delim + cred
+		req, reqErr := http.NewRequest(method, url, bytes.NewReader(logReq.Body))
+		if reqErr != nil {
+			log.Fatal(reqErr)
+		}
+		req.Header.Set("Content-Type", contentJson)
+		res, err := client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer res.Body.Close()
+
+		body, _ := ioutil.ReadAll(res.Body)
+		fmt.Printf("\n%s %s: %v\n%+s\n", method, logReq.Url, res.StatusCode, body)
 	}
 }
