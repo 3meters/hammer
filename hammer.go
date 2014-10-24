@@ -17,8 +17,10 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const contentJson = "application/json"
@@ -32,8 +34,6 @@ type Request struct {
 	Body   json.RawMessage `json:"body,omitempty"`
 }
 
-type Requests []Request
-
 type Config struct {
 	Host   string
 	Signin struct {
@@ -41,10 +41,17 @@ type Config struct {
 		Password  string `json:"password"`
 		InstallId string `json:"installId"`
 	}
+	Cred        string // Set after authentication
 	Seed        string
 	Hammers     int
 	Seconds     int
 	RequestPath string
+}
+
+type Result struct {
+	Succede   int
+	Fail      int
+	ByteCount int64
 }
 
 // Set command line flags
@@ -122,18 +129,118 @@ func main() {
 	}
 	_ = printJson(body)
 
-	cred, authErr := authenticate(client, &config)
-	if authErr != nil {
-		log.Fatal(authErr)
+	// Autheticate and add the user credentail query string to config
+	config.Cred, err = authenticate(client, &config)
+	if err != nil {
+		log.Fatal(err)
 	}
-	run(client, &config, requests, cred)
 
+	maxProcs := runtime.NumCPU() - 1
+	fmt.Println("MaxProcs: ", maxProcs)
+	runtime.GOMAXPROCS(maxProcs)
+
+	// Start the hammers with a 0.1 second stagger
+	sums := []<-chan Result{}
+	for i := 0; i < config.Hammers; i++ {
+		fmt.Println("Starting hammer ", i)
+		go func() {
+			sums[i] = run(client, &config, requests)
+		}()
+		// time.Sleep(100 * time.Millisecond)
+	}
+	for result := range sums {
+		go sum(result)
+	}
+}
+
+func sum(in ...<-chan Result) {
+	total := Result{}
+	for result := range in {
+		fmt.Printf("Result: %#v\n", result)
+		total.Succede += result.Succede
+		total.Fail += result.Fail
+		total.ByteCount += result.ByteCount
+	}
+	fmt.Printf("Grand Total: %#v\n", total)
+}
+
+// run: fire requests at the target with config credentials
+func run(client *http.Client, config *Config, requests []Request) <-chan Result {
+
+	out := make(chan Result, 1)
+	result := Result{}
+
+	stop := false
+
+	// Start the clock
+	go func() {
+		fmt.Println("Start...")
+		time.Sleep(time.Duration(config.Seconds) * time.Second)
+		fmt.Println("Stop")
+		stop = true
+	}()
+
+	newSeed := ""
+	cReqs := len(requests)
+
+	for i := 0; stop == false; i++ {
+
+		if i >= cReqs { // start over
+			i = 0
+		}
+
+		if i == 0 {
+			newSeed = genNewSeed(config.Seed)
+		}
+
+		logReq := requests[i]
+
+		delim := "?"
+		if strings.Contains(logReq.Url, "?") {
+			delim = "&"
+		}
+
+		method := strings.ToUpper(logReq.Method)
+		url := config.Host + logReq.Url + delim + config.Cred
+
+		// Replace the seed in urls with our newly generated seed
+		url = strings.Replace(url, config.Seed, newSeed, -1)
+
+		// Same for the body
+		reqBody := bytes.Replace(logReq.Body, []byte(config.Seed), []byte(newSeed), -1)
+
+		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
+		if reqErr != nil {
+			log.Fatal(reqErr)
+		}
+		req.Header.Set("Content-Type", contentJson)
+		res, err := client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer res.Body.Close()
+
+		body, _ := ioutil.ReadAll(res.Body)
+
+		if 200 <= res.StatusCode && 400 > res.StatusCode {
+			result.Succede++
+		} else {
+			result.Fail++
+		}
+		result.ByteCount += int64(len(body))
+		// fmt.Printf("\n%s %s: %v\n%+s\n", method, logReq.Url, res.StatusCode, body)
+	}
+
+	out <- result
+	close(out)
+	return out
 }
 
 // parseRequestLog: parse our modified csv log format
-func parseRequestLog(file *os.File) (requests []Request, err error) {
+func parseRequestLog(file *os.File) ([]Request, error) {
 
 	const max = 10000
+	requests := []Request{}
 	lineCount := 0
 	reader := csv.NewReader(file)
 	reader.Comma = 0 // ignore commas, one field per line
@@ -153,7 +260,6 @@ func parseRequestLog(file *os.File) (requests []Request, err error) {
 			return requests, errors.New("Request log exceeded max of " + string(max))
 		}
 
-		// fmt.Println(record[0])
 		recordBytes := []byte(record[0])
 		request := Request{}
 		err = json.Unmarshal(recordBytes, &request)
@@ -173,7 +279,7 @@ func printJson(data []byte) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%v", indented.String())
+	fmt.Printf("%v\n", indented.String())
 	return nil
 }
 
@@ -185,7 +291,7 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 
 	reqBodyBytes, _ := json.Marshal(config.Signin)
 
-	fmt.Println("signin url:", url)
+	fmt.Println("Signin url:", url)
 	res, err := client.Post(url, contentJson, bytes.NewReader(reqBodyBytes))
 	if err != nil {
 		return "", err
@@ -220,41 +326,11 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 	return credentials, nil
 }
 
-// run: fire requests at the target with config credentials
-func run(client *http.Client, config *Config, requests Requests, cred string) {
-
-	seedRangeFloat := math.Pow10(len(config.Seed))
+// Generate a new random numeric string the same length as the one passed in
+func genNewSeed(seed string) string {
+	seedRangeFloat := math.Pow10(len(seed))
 	seedRangeInt := int64(seedRangeFloat)
 	newSeedInt := rand.Int63n(seedRangeInt)
 	newSeed := strconv.FormatInt(newSeedInt, 10)
-	fmt.Println("newSeed", newSeed)
-
-	for _, logReq := range requests {
-		delim := "?"
-		if strings.Contains(logReq.Url, "?") {
-			delim = "&"
-		}
-		method := strings.ToUpper(logReq.Method)
-		url := config.Host + logReq.Url + delim + cred
-
-		// Replace the seed in urls with our newly generated seed
-		url = strings.Replace(url, config.Seed, newSeed, -1)
-
-		// Same for the body
-		reqBody := bytes.Replace(logReq.Body, []byte(config.Seed), []byte(newSeed), -1)
-
-		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
-		if reqErr != nil {
-			log.Fatal(reqErr)
-		}
-		req.Header.Set("Content-Type", contentJson)
-		res, err := client.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer res.Body.Close()
-
-		body, _ := ioutil.ReadAll(res.Body)
-		fmt.Printf("\n%s %s: %v\n%+s\n", method, logReq.Url, res.StatusCode, body)
-	}
+	return newSeed
 }
