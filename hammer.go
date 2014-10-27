@@ -140,22 +140,19 @@ func main() {
 	runtime.GOMAXPROCS(maxProcs)
 
 	// Start the hammers with a 0.1 second stagger
-	sums := []<-chan Result{}
+	ch := make(chan Result, config.Hammers)
+	go sum(ch, config.Hammers)
 	for i := 0; i < config.Hammers; i++ {
 		fmt.Println("Starting hammer ", i)
-		go func() {
-			sums[i] = run(client, &config, requests)
-		}()
-		// time.Sleep(100 * time.Millisecond)
-	}
-	for result := range sums {
-		go sum(result)
+		run(client, &config, requests, ch)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
-func sum(in ...<-chan Result) {
+func sum(ch chan Result, expected int) {
 	total := Result{}
-	for result := range in {
+	for i := 0; i < expected; i++ {
+		result := <-ch
 		fmt.Printf("Result: %#v\n", result)
 		total.Succede += result.Succede
 		total.Fail += result.Fail
@@ -165,9 +162,8 @@ func sum(in ...<-chan Result) {
 }
 
 // run: fire requests at the target with config credentials
-func run(client *http.Client, config *Config, requests []Request) <-chan Result {
+func run(client *http.Client, config *Config, requests []Request, ch chan Result) {
 
-	out := make(chan Result, 1)
 	result := Result{}
 
 	stop := false
@@ -231,9 +227,8 @@ func run(client *http.Client, config *Config, requests []Request) <-chan Result 
 		// fmt.Printf("\n%s %s: %v\n%+s\n", method, logReq.Url, res.StatusCode, body)
 	}
 
-	out <- result
-	close(out)
-	return out
+	fmt.Printf("Run returning result: %v\n", result)
+	ch <- result
 }
 
 // parseRequestLog: parse our modified csv log format
