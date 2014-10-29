@@ -13,7 +13,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -46,9 +45,14 @@ type Config struct {
 	Hammers     int
 	Seconds     int
 	RequestPath string
+	Log         bool // output requests and responses to stdout
 }
 
+// Module global
+var config Config
+
 type Result struct {
+	Runs      int
 	Succede   int
 	Fail      int
 	ByteCount int64
@@ -56,6 +60,8 @@ type Result struct {
 
 // Set command line flags
 func init() {
+	// Seed rand with current nanoseconds
+	rand.Seed(time.Now().UTC().UnixNano())
 	flag.StringVar(&configFileName, "config", "config.json", "config file")
 	flag.StringVar(&configFileName, "c", "config.json", "config file")
 	flag.BoolVar(&helpMe, "help", false, "help")
@@ -78,9 +84,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	config := Config{
+	config = Config{
 		Hammers:     1,
-		Seconds:     10,
+		Seconds:     5,
 		RequestPath: "request.log",
 	}
 
@@ -135,34 +141,51 @@ func main() {
 		log.Fatal(err)
 	}
 
-	maxProcs := runtime.NumCPU() - 1
+	// Set the number of parallel threads to count of cores - 2
+	// One for node, one for mongo, if running on the same machine
+	maxProcs := runtime.NumCPU() - 2
 	fmt.Println("MaxProcs: ", maxProcs)
-	runtime.GOMAXPROCS(maxProcs)
+	if maxProcs > 1 {
+		runtime.GOMAXPROCS(maxProcs)
+	}
 
-	// Start the hammers with a 0.1 second stagger
+	// Start the collector service
 	ch := make(chan Result, config.Hammers)
 	go sum(ch, config.Hammers)
+
+	// Start the hammers with a 0.1 second stagger
 	for i := 0; i < config.Hammers; i++ {
 		fmt.Println("Starting hammer ", i)
-		run(client, &config, requests, ch)
+		go run(client, requests, ch)
 		time.Sleep(100 * time.Millisecond)
 	}
+
+	// Infinite loop to prevent exit
+	select {}
 }
 
+// sum: read and sum the results from the channel
 func sum(ch chan Result, expected int) {
 	total := Result{}
 	for i := 0; i < expected; i++ {
 		result := <-ch
-		fmt.Printf("Result: %#v\n", result)
+		fmt.Printf("Result: %+v\n", result)
+		total.Runs += result.Runs
 		total.Succede += result.Succede
 		total.Fail += result.Fail
 		total.ByteCount += result.ByteCount
 	}
-	fmt.Printf("Grand Total: %#v\n", total)
+	close(ch)
+	fmt.Printf("\nTotal: %+v\n\n", total)
+	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
+	fmt.Printf("Fail Rate: %.3f\n", failRate)
+	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
+	fmt.Printf("Bytes per second: %v\n", total.ByteCount/int64(config.Seconds))
+	os.Exit(0)
 }
 
 // run: fire requests at the target with config credentials
-func run(client *http.Client, config *Config, requests []Request, ch chan Result) {
+func run(client *http.Client, requests []Request, ch chan Result) {
 
 	result := Result{}
 
@@ -170,9 +193,7 @@ func run(client *http.Client, config *Config, requests []Request, ch chan Result
 
 	// Start the clock
 	go func() {
-		fmt.Println("Start...")
 		time.Sleep(time.Duration(config.Seconds) * time.Second)
-		fmt.Println("Stop")
 		stop = true
 	}()
 
@@ -182,11 +203,12 @@ func run(client *http.Client, config *Config, requests []Request, ch chan Result
 	for i := 0; stop == false; i++ {
 
 		if i >= cReqs { // start over
+			result.Runs++
 			i = 0
 		}
 
 		if i == 0 {
-			newSeed = genNewSeed(config.Seed)
+			newSeed = genNewSeed()
 		}
 
 		logReq := requests[i]
@@ -224,10 +246,16 @@ func run(client *http.Client, config *Config, requests []Request, ch chan Result
 			result.Fail++
 		}
 		result.ByteCount += int64(len(body))
-		// fmt.Printf("\n%s %s: %v\n%+s\n", method, logReq.Url, res.StatusCode, body)
+
+		if config.Log == true {
+			fmt.Printf("\n%s %s\n", method, url)
+			if len(reqBody) > 0 {
+				fmt.Printf("%s\n", reqBody)
+			}
+			fmt.Printf("%v\n%s\n", res.StatusCode, body)
+		}
 	}
 
-	fmt.Printf("Run returning result: %v\n", result)
 	ch <- result
 }
 
@@ -321,11 +349,12 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 	return credentials, nil
 }
 
-// Generate a new random numeric string the same length as the one passed in
-func genNewSeed(seed string) string {
-	seedRangeFloat := math.Pow10(len(seed))
-	seedRangeInt := int64(seedRangeFloat)
-	newSeedInt := rand.Int63n(seedRangeInt)
-	newSeed := strconv.FormatInt(newSeedInt, 10)
-	return newSeed
+// Generate a new random numeric string
+func genNewSeed() string {
+	seedStr := strconv.FormatInt(rand.Int63(), 10)
+	if len(seedStr) > 7 {
+		// grab the last 8 digits
+		seedStr = seedStr[len(seedStr)-8 : len(seedStr)-1]
+	}
+	return seedStr
 }

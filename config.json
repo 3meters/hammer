@@ -5,8 +5,9 @@
     "Password": "admin",
     "InstallId": "1"
   },
-  "Seed": "326759",
+  "Seed": "625195",
   "Hammers": 3,
   "Seconds": 3,
-  "RequestPath": "request.log"
+  "RequestPath": "request.log",
+  "Log": false
 }
