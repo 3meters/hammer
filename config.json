@@ -1,13 +1,13 @@
 {
-  "Host": "https://localhost:6644",
+  "Host": "https://api.aircandi.com:444",
   "Signin": {
     "Email": "admin",
     "Password": "admin",
     "InstallId": "1"
   },
   "Seed": "625195",
-  "Hammers": 3,
-  "Seconds": 3,
+  "Hammers": 5,
+  "Seconds": 10,
   "RequestPath": "request.log",
   "Log": false
 }
