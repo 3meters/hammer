@@ -153,15 +153,19 @@ func main() {
 	ch := make(chan Result, config.Hammers)
 	go sum(ch, config.Hammers)
 
-	// Start the hammers with a 0.1 second stagger
+	// Start the hammers with a small stagger
 	for i := 0; i < config.Hammers; i++ {
 		fmt.Println("Starting hammer ", i)
 		go run(client, requests, ch)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 	}
 
 	// Infinite loop to prevent exit
-	select {}
+	for {
+		fmt.Print(".")
+		time.Sleep(5 * time.Second)
+	}
+
 }
 
 // sum: read and sum the results from the channel
