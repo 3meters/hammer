@@ -6,8 +6,8 @@
     "InstallId": "1"
   },
   "Seed": "625195",
-  "Hammers": 5,
-  "Seconds": 10,
+  "Hammers": 20,
+  "Seconds": 30,
   "RequestPath": "request.log",
   "Log": false
 }
