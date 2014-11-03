@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -56,6 +57,7 @@ type Result struct {
 	Succede   int
 	Fail      int
 	ByteCount int64
+	Times     []int
 }
 
 // Set command line flags
@@ -173,18 +175,29 @@ func sum(ch chan Result, expected int) {
 	total := Result{}
 	for i := 0; i < expected; i++ {
 		result := <-ch
-		fmt.Printf("Result: %+v\n", result)
 		total.Runs += result.Runs
 		total.Succede += result.Succede
 		total.Fail += result.Fail
 		total.ByteCount += result.ByteCount
+		total.Times = append(total.Times, result.Times...)
 	}
+
 	close(ch)
-	fmt.Printf("\nTotal: %+v\n\n", total)
 	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
-	fmt.Printf("Fail Rate: %.3f\n", failRate)
+	sort.Ints(total.Times)
+	min := total.Times[0] / 100000
+	max := total.Times[len(total.Times)-1] / 100000
+	median := total.Times[len(total.Times)/2] / 100000
+
+	fmt.Printf("\n\nResults: \n\n")
+	fmt.Printf("Runs: %v\n", total.Runs)
+	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
+	fmt.Printf("Errors: %v\n", total.Fail)
+	fmt.Printf("Fail Rate: %.2f\n", failRate)
+	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
 	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
-	fmt.Printf("Bytes per second: %v\n", total.ByteCount/int64(config.Seconds))
+	fmt.Printf("Min time: %v\nMax time: %v\nMedian time: %v\n\n", min, max, median)
+
 	os.Exit(0)
 }
 
@@ -236,11 +249,19 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 			log.Fatal(reqErr)
 		}
 		req.Header.Set("Content-Type", contentJson)
+
+		// Start the request timer
+		before := time.Now().UnixNano()
 		res, err := client.Do(req)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer res.Body.Close()
+
+		// Time the response
+		after := time.Now().UnixNano()
+		ns := int(after - before) // nanoseconds
+		result.Times = append(result.Times, ns)
 
 		body, _ := ioutil.ReadAll(res.Body)
 
