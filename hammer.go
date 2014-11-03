@@ -184,6 +184,11 @@ func sum(ch chan Result, expected int) {
 	min := total.Times[0] / 100000
 	max := total.Times[len(total.Times)-1] / 100000
 	median := total.Times[len(total.Times)/2] / 100000
+	var sum int64
+	for t := range total.Times {
+		sum += int64(t)
+	}
+	mean := int(sum / int64(len(total.Times)))
 
 	fmt.Printf("\n\nResults: \n\n")
 	fmt.Printf("Runs: %v\n", total.Runs)
@@ -192,7 +197,7 @@ func sum(ch chan Result, expected int) {
 	fmt.Printf("Fail Rate: %.2f\n", failRate)
 	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
 	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
-	fmt.Printf("Min time: %v\nMax time: %v\nMedian time: %v\n\n", min, max, median)
+	fmt.Printf("Min time: %v\nMax time: %v\nMean time: %v\nMedian time: %v\n\n", min, max, mean, median)
 
 	os.Exit(0)
 }
