@@ -185,10 +185,10 @@ func sum(ch chan Result, expected int) {
 	max := total.Times[len(total.Times)-1] / 100000
 	median := total.Times[len(total.Times)/2] / 100000
 	var sum int64
-	for t := range total.Times {
-		sum += int64(t)
+	for i := range total.Times {
+		sum += int64(total.Times[i])
 	}
-	mean := int(sum / int64(len(total.Times)))
+	mean := int(sum / int64(len(total.Times)) / 100000)
 
 	fmt.Printf("\n\nResults: \n\n")
 	fmt.Printf("Runs: %v\n", total.Runs)
