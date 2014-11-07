@@ -1,5 +1,5 @@
 {
-  "Host": "https://api.aircandi.com:444",
+  "Host": "https://api.aircandi.com:8443",
   "Signin": {
     "Email": "admin",
     "Password": "admin",

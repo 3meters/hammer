@@ -24,9 +24,11 @@ import (
 )
 
 const contentJson = "application/json"
+const version = "0.1.1"
 
 var configFileName string
 var helpMe bool
+var versionMe bool
 
 type Request struct {
 	Method string          `json:"method"`
@@ -68,6 +70,8 @@ func init() {
 	flag.StringVar(&configFileName, "c", "config.json", "config file")
 	flag.BoolVar(&helpMe, "help", false, "help")
 	flag.BoolVar(&helpMe, "h", false, "help")
+	flag.BoolVar(&versionMe, "version", false, "version")
+	flag.BoolVar(&versionMe, "v", false, "version")
 }
 
 func main() {
@@ -76,6 +80,11 @@ func main() {
 
 	if helpMe {
 		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	if versionMe {
+		fmt.Println(version)
 		os.Exit(0)
 	}
 
@@ -124,27 +133,38 @@ func main() {
 	if config.Host == "" {
 		log.Fatalln("config.Host is required")
 	}
+	fmt.Print("Pinging host...")
 	res, err := client.Get(config.Host)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
 
-	// Make sure the host returns JSON and pretty-print it to the console
+	if res.StatusCode < 200 || res.StatusCode >= 400 {
+		log.Fatal("Host response status code: ", res.StatusCode)
+	}
+
+	// Make sure the host returns something
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = printJson(body)
+	if len(body) < 1 {
+		log.Fatal("Host returned no data", res.StatusCode)
+	}
+	fmt.Println("Ok")
 
 	// Autheticate and add the user credentail query string to config
+	fmt.Print("Authenticating...")
 	config.Cred, err = authenticate(client, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Ok")
 
 	// Make sure we stay limited to one core so as not to
 	// starve server when doing single-box testing
+	// TODO: override in config
 	runtime.GOMAXPROCS(1)
 
 	// Start the collector service
@@ -340,7 +360,6 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 
 	reqBodyBytes, _ := json.Marshal(config.Signin)
 
-	fmt.Println("Signin url:", url)
 	res, err := client.Post(url, contentJson, bytes.NewReader(reqBodyBytes))
 	if err != nil {
 		return "", err
@@ -368,9 +387,11 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 		return "", err
 	}
 
-	fmt.Printf("%s\n%#v\n", "Signin response: ", body)
-	credentials := "user=" + body.Session.UserId +
-		"&session=" + body.Session.SessionId
+	if config.Log == true {
+		fmt.Printf("%s\n%#v\n", "Signin response: ", body)
+	}
+
+	credentials := "user=" + body.Session.UserId + "&session=" + body.Session.SessionId
 
 	return credentials, nil
 }
