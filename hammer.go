@@ -16,7 +16,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -133,7 +132,7 @@ func main() {
 	if config.Host == "" {
 		log.Fatalln("config.Host is required")
 	}
-	fmt.Print("Pinging host...")
+	fmt.Print("Pinging host... ")
 	res, err := client.Get(config.Host)
 	if err != nil {
 		log.Fatal(err)
@@ -155,17 +154,12 @@ func main() {
 	fmt.Println("Ok")
 
 	// Autheticate and add the user credentail query string to config
-	fmt.Print("Authenticating...")
+	fmt.Print("Authenticating... ")
 	config.Cred, err = authenticate(client, &config)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Ok")
-
-	// Make sure we stay limited to one core so as not to
-	// starve server when doing single-box testing
-	// TODO: override in config
-	runtime.GOMAXPROCS(1)
 
 	// Start the collector service
 	ch := make(chan Result, config.Hammers)
