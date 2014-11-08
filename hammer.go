@@ -211,6 +211,7 @@ func sum(ch chan Result, expected int) {
 	mean := int(sum / int64(len(total.Times)) / 100000)
 
 	fmt.Printf("\n\nResults: \n\n")
+	fmt.Printf("Seconds: %v\n", config.Seconds)
 	fmt.Printf("Runs: %v\n", total.Runs)
 	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
 	fmt.Printf("Errors: %v\n", total.Fail)

@@ -478,4 +478,68 @@ Mean time: 525
 Median time: 380
 
 
+Home mac, local, mongo 2.4.11
+------------------
+
+Result: 
+
+Runs: 934
+Requests: 35633
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 378
+Requests per second: 296
+Min time: 16
+Max time: 1455
+Mean time: 168
+Median time: 83
+
+Runs: 987
+Requests: 37626
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 399
+Requests per second: 313
+Min time: 18
+Max time: 1411
+Mean time: 159
+Median time: 75
+
+(60 seconds, not 120)
+Runs: 475
+Requests: 18124
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 385
+Requests per second: 302
+Min time: 16
+Max time: 1756
+Mean time: 165
+Median time: 80
+
+(60 seconds, db, not clean, npm update)
+Runs: 261
+Requests: 10059
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 214
+Requests per second: 167
+Min time: 18
+Max time: 3129
+Mean time: 298
+Median time: 156
+
+(db clean)
+Runs: 474
+Requests: 18071
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 382
+Requests per second: 301
+Min time: 21
+Max time: 1673
+Mean time: 165
+Median time: 83
+
+
 
