@@ -8,6 +8,7 @@
   "Seed": "625195",
   "Hammers": 20,
   "Seconds": 30,
+  "MaxProcs": 1,
   "RequestPath": "request.log",
   "Log": false
 }

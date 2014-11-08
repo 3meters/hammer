@@ -311,3 +311,142 @@ Min time: 358
 Max time: 8828
 Mean time: 971
 Median time: 921
+
+
+Proxstage local host, Joyent 1.75 GB box
+========================================
+Results: 
+
+Runs: 206
+Requests: 7973
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 85
+Requests per second: 66
+Min time: 30
+Max time: 6081
+Mean time: 239
+Median time: 109
+
+Runs: 206
+Requests: 7931
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 85
+Requests per second: 66
+Min time: 28
+Max time: 7932
+Mean time: 246
+Median time: 110
+
+Proxstage local host, Joyent 4 GB box
+========================================
+{
+  "Host": "https://api.aircandi.com:8443",
+  "Signin": {
+    "Email": "admin",
+    "Password": "admin",
+    "InstallId": "1"
+  },
+  "Seed": "625195",
+  "Hammers": 5,
+  "Seconds": 120,
+  "RequestPath": "request.log",
+  "Log": false
+}
+
+Results: 
+
+Runs: 142
+Requests: 5450
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 58
+Requests per second: 45
+Min time: 28
+Max time: 7364
+Mean time: 254
+Median time: 114
+
+Runs: 142
+Requests: 5552
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 59
+Requests per second: 46
+Min time: 28
+Max time: 6964
+Mean time: 224
+Median time: 106
+
+Runs: 141
+Requests: 5461
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 58
+Requests per second: 45
+Min time: 28
+Max time: 5914
+Mean time: 249
+Median time: 109
+
+
+From Amazon to Joyent 4gb, no cloudflare
+-----------------------------------------
+
+Results: 
+
+Runs: 133
+Requests: 5125
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 53
+Requests per second: 42
+Min time: 282
+Max time: 3607
+Mean time: 561
+Median time: 399
+
+Results: 
+
+Runs: 137
+Requests: 5302
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 55
+Requests per second: 44
+Min time: 285
+Max time: 2696
+Mean time: 525
+Median time: 380
+
+
+From Amazon to Joyent 3.5gb, no cloudflare
+-----------------------------------------
+
+{
+  "Host": "https://api.aircandi.com:8443",
+  "Signin": {
+    "Email": "admin",
+    "Password": "admin",
+    "InstallId": "1"
+  },
+  "Seed": "625195",
+  "Hammers": 5,
+  "Seconds": 120,
+  "RequestPath": "request.log",
+  "Log": false
+}
+
+Runs: 203
+Requests: 7835
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 84
+Requests per second: 65
+Min time: 28
+Max time: 8669
+Mean time: 302
+Median time: 127
+
+
