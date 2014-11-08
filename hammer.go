@@ -16,6 +16,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -160,6 +161,11 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println("Ok")
+
+	// Make sure we stay limited to one core so as not to
+	// starve server when doing single-box testing
+	// TODO: override in config
+	runtime.GOMAXPROCS(1)
 
 	// Start the collector service
 	ch := make(chan Result, config.Hammers)
