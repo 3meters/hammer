@@ -47,6 +47,7 @@ type Config struct {
 	Seed        string
 	Hammers     int
 	Seconds     int
+	MaxProcs    int
 	RequestPath string
 	Log         bool // output requests and responses to stdout
 }
@@ -98,6 +99,7 @@ func main() {
 	config = Config{
 		Hammers:     1,
 		Seconds:     5,
+		MaxProcs:    1,
 		RequestPath: "request.log",
 	}
 
@@ -162,10 +164,8 @@ func main() {
 	}
 	fmt.Println("Ok")
 
-	// Make sure we stay limited to one core so as not to
-	// starve server when doing single-box testing
-	// TODO: override in config
-	runtime.GOMAXPROCS(1)
+	//
+	runtime.GOMAXPROCS(config.MaxProcs)
 
 	// Start the collector service
 	ch := make(chan Result, config.Hammers)

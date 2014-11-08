@@ -391,36 +391,6 @@ Mean time: 249
 Median time: 109
 
 
-From Amazon to Joyent 4gb, no cloudflare
------------------------------------------
-
-Results: 
-
-Runs: 133
-Requests: 5125
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 53
-Requests per second: 42
-Min time: 282
-Max time: 3607
-Mean time: 561
-Median time: 399
-
-Results: 
-
-Runs: 137
-Requests: 5302
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 55
-Requests per second: 44
-Min time: 285
-Max time: 2696
-Mean time: 525
-Median time: 380
-
-
 Joyent 3.5gb,
 -----------------------------------------
 
@@ -459,5 +429,36 @@ Min time: 27
 Max time: 8727
 Mean time: 308
 Median time: 129
+
+
+From Amazon to Joyent 4gb, no cloudflare
+-----------------------------------------
+
+Results: 
+
+Runs: 133
+Requests: 5125
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 53
+Requests per second: 42
+Min time: 282
+Max time: 3607
+Mean time: 561
+Median time: 399
+
+Results: 
+
+Runs: 137
+Requests: 5302
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 55
+Requests per second: 44
+Min time: 285
+Max time: 2696
+Mean time: 525
+Median time: 380
+
 
 
