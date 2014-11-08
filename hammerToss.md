@@ -1,12 +1,83 @@
 
-Running locally on server
-=============================
+Running locally on production server
+====================================
 
 Config:
 {
-  "Host": "https://localhost:444",
+  "Host": "https://localhost:8443",
   "Signin": {
+    "Email": "admin",
+    "Password": "admin",
+    "InstallId": "1"
+  },
+  "Seed": "625195",
+  "Hammers": 5,
+  "Seconds": 120,
+  "MaxProcs": 1,
+  "RequestPath": "request.log",
+  "Log": false
+}
 
+Results: 
+
+Runs: 379
+Requests: 14525
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 153
+Requests per second: 121
+Min time: 37
+Max time: 7998
+Mean time: 412
+Median time: 193
+
+
+Result2: 
+
+Runs: 426
+Requests: 16273
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 172
+Requests per second: 135
+Min time: 33
+Max time: 7237
+Mean time: 367
+Median time: 172
+
+
+Results3:
+
+Runs: 406
+Requests: 15549
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 164
+Requests per second: 129
+Min time: 26
+Max time: 7270
+Mean time: 385
+Median time: 183
+
+Result 4:
+Runs: 403
+Requests: 15371
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 162
+Requests per second: 128
+Min time: 26
+Max time: 8160
+Mean time: 389
+Median time: 185
+
+
+Joyent 3.5gb,
+-----------------------------------------
+
+{
+  "Host": "https://api.aircandi.com:8443",
+  "Signin": {
     "Email": "admin",
     "Password": "admin",
     "InstallId": "1"
@@ -18,44 +89,28 @@ Config:
   "Log": false
 }
 
-Result1:
-
-Runs: 390
-Requests: 14962
+Runs: 203
+Requests: 7835
 Errors: 0
 Fail Rate: 0.00
-KBytes per second: 158
-Requests per second: 124
+KBytes per second: 84
+Requests per second: 65
+Min time: 28
+Max time: 8669
+Mean time: 302
+Median time: 127
+
+Runs: 201
+Requests: 7737
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 83
+Requests per second: 64
 Min time: 27
-Max time: 7891
-Mean time: 400
-Median time: 186
+Max time: 8727
+Mean time: 308
+Median time: 129
 
-Result2: 
-
-Runs: 406
-Requests: 15518
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 164
-Requests per second: 129
-Min time: 25
-Max time: 8371
-Mean time: 385
-Median time: 180
-
-Results3: 
-
-Runs: 414
-Requests: 15845
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 167
-Requests per second: 132
-Min time: 27
-Max time: 8606
-Mean time: 377
-Median time: 178
 
 
 From Amazon, no CloudFlare:  IP: 165.225.151.254
@@ -391,44 +446,6 @@ Mean time: 249
 Median time: 109
 
 
-Joyent 3.5gb,
------------------------------------------
-
-{
-  "Host": "https://api.aircandi.com:8443",
-  "Signin": {
-    "Email": "admin",
-    "Password": "admin",
-    "InstallId": "1"
-  },
-  "Seed": "625195",
-  "Hammers": 5,
-  "Seconds": 120,
-  "RequestPath": "request.log",
-  "Log": false
-}
-
-Runs: 203
-Requests: 7835
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 84
-Requests per second: 65
-Min time: 28
-Max time: 8669
-Mean time: 302
-Median time: 127
-
-Runs: 201
-Requests: 7737
-Errors: 0
-Fail Rate: 0.00
-KBytes per second: 83
-Requests per second: 64
-Min time: 27
-Max time: 8727
-Mean time: 308
-Median time: 129
 
 
 From Amazon to Joyent 4gb, no cloudflare
