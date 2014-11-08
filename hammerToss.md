@@ -421,7 +421,7 @@ Mean time: 525
 Median time: 380
 
 
-From Amazon to Joyent 3.5gb, no cloudflare
+Joyent 3.5gb,
 -----------------------------------------
 
 {
@@ -448,5 +448,16 @@ Min time: 28
 Max time: 8669
 Mean time: 302
 Median time: 127
+
+Runs: 201
+Requests: 7737
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 83
+Requests per second: 64
+Min time: 27
+Max time: 8727
+Mean time: 308
+Median time: 129
 
 
