@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -24,7 +23,7 @@ import (
 )
 
 const contentJson = "application/json"
-const version = "0.1.1"
+const version = "0.1.2"
 
 var configFileName string
 var helpMe bool
@@ -60,8 +59,21 @@ type Result struct {
 	Succede   int
 	Fail      int
 	ByteCount int64
-	Times     []int
+	Times     Times
 }
+
+type Time struct {
+	Tag      string
+	Reported int
+	Measured int
+}
+
+type Times []Time
+
+// Sorter interfaces for Times
+func (t Times) Len() int           { return len(t) }
+func (t Times) Swap(i, j int)      { t[j], t[i] = t[i], t[j] }
+func (t Times) Less(i, j int) bool { return t[i].Measured < t[j].Measured }
 
 // Set command line flags
 func init() {
@@ -164,7 +176,7 @@ func main() {
 	}
 	fmt.Println("Ok")
 
-	//
+	// Set max procs
 	runtime.GOMAXPROCS(config.MaxProcs)
 
 	// Start the collector service
@@ -200,15 +212,15 @@ func sum(ch chan Result, expected int) {
 
 	close(ch)
 	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
-	sort.Ints(total.Times)
-	min := total.Times[0] / 100000
-	max := total.Times[len(total.Times)-1] / 100000
-	median := total.Times[len(total.Times)/2] / 100000
-	var sum int64
+	sort.Sort(total.Times)
+	min := total.Times[0].Measured
+	max := total.Times[len(total.Times)-1].Measured
+	median := total.Times[len(total.Times)/2].Measured
+	sum := 0
 	for i := range total.Times {
-		sum += int64(total.Times[i])
+		sum += total.Times[i].Measured
 	}
-	mean := int(sum / int64(len(total.Times)) / 100000)
+	mean := int(sum / len(total.Times))
 
 	fmt.Printf("\n\nResults: \n\n")
 	fmt.Printf("Seconds: %v\n", config.Seconds)
@@ -280,26 +292,43 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		}
 		defer res.Body.Close()
 
-		// Time the response
+		// Record the measured time the response took to return
 		after := time.Now().UnixNano()
-		ns := int(after - before) // nanoseconds
-		result.Times = append(result.Times, ns)
 
-		body, _ := ioutil.ReadAll(res.Body)
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		if 200 <= res.StatusCode && 400 > res.StatusCode {
 			result.Succede++
 		} else {
 			result.Fail++
 		}
-		result.ByteCount += int64(len(body))
+		result.ByteCount += int64(len(bodyBytes))
+
+		// Parse the request tag and reported time from the response body
+		body := struct {
+			Tag  string  `json:"tag"`
+			Time float32 `json:"time"`
+		}{} // anonymous struct type
+
+		err = json.Unmarshal(bodyBytes, &body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Add the respone time to the result
+		time := Time{
+			Tag:      body.Tag,
+			Reported: int(body.Time * 1000),           // miliseconds from fractional seconds
+			Measured: int((after - before) / 1000000), // miliseconds from nanoseconds
+		}
+		result.Times = append(result.Times, time)
 
 		if config.Log == true {
-			fmt.Printf("\n%s %s\n", method, url)
-			if len(reqBody) > 0 {
-				fmt.Printf("%s\n", reqBody)
-			}
-			fmt.Printf("%v\n%s\n", res.StatusCode, body)
+			fmt.Printf("\n%d %s %s\n", res.StatusCode, method, url)
+			fmt.Printf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured)
 		}
 	}
 
@@ -327,7 +356,7 @@ func parseRequestLog(file *os.File) ([]Request, error) {
 
 		lineCount++
 		if lineCount > max {
-			return requests, errors.New("Request log exceeded max of " + string(max))
+			return requests, fmt.Errorf("Request log exceeded max of %v", max)
 		}
 
 		recordBytes := []byte(record[0])
@@ -380,7 +409,7 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 
 	bodyBytes, err := ioutil.ReadAll(res.Body)
 	if res.StatusCode != 200 {
-		return "", errors.New("Authentication failed with status " + string(res.StatusCode))
+		return "", fmt.Errorf("Authentication failed with status %v", res.StatusCode)
 	}
 
 	err = json.Unmarshal(bodyBytes, &body)

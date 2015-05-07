@@ -1,38 +1,61 @@
-{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.tarzan625195","name":"tarzan625195","email":"tarzan625195@3meters.com","password":"foobar"},"secret":"larissa","installId":"625195"}}
-{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.jane625195","name":"jane625195","email":"jane625195@3meters.com","password":"foobar"},"secret":"larissa","installId":"625195"}}
-{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.mary625195","name":"mary625195","email":"mary625195@3meters.com","password":"foobar"},"secret":"larissa","installId":"625195"}}
-{"method":"post","url":"/v1/data/places","body":{"data":{"_id":"pl.river625195","name":"River625195"}}}
-{"method":"post","url":"/v1/data/places","body":{"data":{"_id":"pl.treehouse625195","name":"Treehouse625195","visibility":"private"}}}
-{"method":"post","url":"/v1/data/places","body":{"data":{"_id":"pl.janehouse625195","name":"Janehouse625195","visibility":"private"}}}
-{"method":"post","url":"/v1/data/links","body":{"data":{"_to":"pl.river625195","_from":"us.tarzan625195","type":"watch"}}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.tarzanToRiver625195","description":"Good water, bad crocs"},"links":[{"_to":"pl.river625195","type":"content"}],"returnNotifications":true}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.tarzanToTreehouse625195","description":"Check out my hammock"},"links":[{"_to":"pl.treehouse625195","type":"content"}],"returnNotifications":true}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.janeToJanehouse625195","description":"Checkout my bed"},"links":[{"_to":"pl.janehouse625195","type":"content"}],"returnNotifications":true}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.tarzanToJanehouse625195","description":"What is bed?"},"links":[{"_to":"pl.janehouse625195","type":"content"}],"returnNotifications":true}}
-{"method":"get","url":"/v1/find/messages/me.tarzanToRiver625195"}
-{"method":"get","url":"/v1/find/messages/me.tarzanToRiver625195"}
-{"method":"get","url":"/v1/find/messages/me.tarzanToRiver625195"}
-{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse625195"}
-{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse625195"}
-{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.river625195","cursor":{"linkTypes":["watch"],"direction":"in"}}}
-{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.river625195","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"_id":"me.tarzanInvitesHimselfOver625195","schema":"message","description":"I would like to see Janehouse"},"links":[{"_id":"li.toJaneFromTarzanSelfInvite625195","_to":"us.jane625195","type":"share"},{"_id":"li.toJanehouseFromTarzanSelfInvite625195","_to":"pl.janehouse625195","type":"share"}],"returnNotifications":true}}
-{"method":"get","url":"/v1/data/messages/me.tarzanInvitesHimselfOver625195"}
-{"method":"get","url":"/v1/data/links/li.toJaneFromTarzanSelfInvite625195"}
-{"method":"get","url":"/v1/data/links/li.toJanehouseFromTarzanSelfInvite625195"}
-{"method":"post","url":"/v1/data/links","body":{"data":{"_id":"li.tarzanWatchesJaneHouse625195","_from":"us.tarzan625195","_to":"pl.janehouse625195","type":"watch"}}}
-{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.janehouse625195","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"method":"post","url":"/v1/data/links/li.tarzanWatchesJaneHouse625195","body":{"data":{"enabled":true}}}
-{"method":"post","url":"/v1/data/links/li.tarzanWatchesJaneHouse625195","body":{"data":{"enabled":true}}}
-{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pl.janehouse625195","cursor":{"linkTypes":["content"],"direction":"in"}}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"_id":"me.tarzanInvite625195","schema":"message","type":"root","description":"Check out my treehouse"},"links":[{"_id":"li.toTreehouseFromTarzanInvite625195","_to":"pl.treehouse625195","type":"share"},{"_id":"li.toJaneFromTarzanInvite625195","_to":"us.jane625195","type":"share"}],"returnNotifications":true}}
-{"method":"get","url":"/v1/data/links/li.toJaneFromTarzanInvite625195"}
-{"method":"get","url":"/v1/data/links/li.toTreehouseFromTarzanInvite625195"}
-{"method":"post","url":"/v1/do/insertLink","body":{"toId":"pl.treehouse625195","fromId":"us.jane625195","type":"watch"}}
+{"method":"post","url":"/v1/auth/signin","body":{"name":"Test Admin User","email":"admin","password":"admin","photo":{"prefix":"default_user.jpg","source":"aircandi"},"installId":"123456"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.tarzan916104","name":"tarzan916104","email":"tarzan916104@3meters.com","password":"foobar","photo":{"prefix":"picture.jpg","source":"aircandi.users"}},"secret":"larissa","installId":"916104"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.jane916104","name":"jane916104","email":"jane916104@3meters.com","password":"foobar","photo":{"prefix":"picture.jpg","source":"aircandi.users"}},"secret":"larissa","installId":"916104"}}
+{"method":"post","url":"/v1/user/create","body":{"data":{"_id":"us.mary916104","name":"mary916104","email":"mary916104@3meters.com","password":"foobar","photo":{"prefix":"picture.jpg","source":"aircandi.users"}},"secret":"larissa","installId":"916104"}}
+{"method":"post","url":"/v1/data/places?install=916104","body":{"data":{"_id":"pl.jungle916104","name":"Jungle916104","location":{"lat":72.31715,"lng":-25.083896}}}}
+{"method":"post","url":"/v1/data/beacons","body":{"data":[{"bssid":"Beacon1.916104","location":{"lat":72.31715,"lng":-25.083896}},{"bssid":"Beacon2.916104","location":{"lat":72.31725,"lng":-25.083896}},{"bssid":"Beacon3.916104","location":{"lat":72.31735,"lng":-25.083896}},{"bssid":"Beacon4.916104","location":{"lat":72.31745,"lng":-25.083896}}]}}
+{"method":"put","url":"/v1/data/beacons","body":{"data":[{"_id":"be.Beacon1.916104","schema":"beacon","collection":"beacons","_owner":"us.000000.00000.000.000000","_creator":"us.tarzan916104","_modifier":"us.tarzan916104","createdDate":1431026644067,"createdIp":"127.0.0.1","modifiedDate":1431026644067,"modifiedIp":"127.0.0.1","location":{"lat":72.31715,"lng":-25.083896,"geometry":[-25.083896,72.31715],"accuracy":25},"bssid":"Beacon1.916104"},{"_id":"be.Beacon2.916104","schema":"beacon","collection":"beacons","_owner":"us.000000.00000.000.000000","_creator":"us.tarzan916104","_modifier":"us.tarzan916104","createdDate":1431026644069,"createdIp":"127.0.0.1","modifiedDate":1431026644069,"modifiedIp":"127.0.0.1","location":{"lat":72.31725,"lng":-25.083896,"geometry":[-25.083896,72.31725],"accuracy":25},"bssid":"Beacon2.916104"},{"_id":"be.Beacon3.916104","schema":"beacon","collection":"beacons","_owner":"us.000000.00000.000.000000","_creator":"us.tarzan916104","_modifier":"us.tarzan916104","createdDate":1431026644071,"createdIp":"127.0.0.1","modifiedDate":1431026644071,"modifiedIp":"127.0.0.1","location":{"lat":72.31735,"lng":-25.083896,"geometry":[-25.083896,72.31735],"accuracy":25},"bssid":"Beacon3.916104"},{"_id":"be.Beacon4.916104","schema":"beacon","collection":"beacons","_owner":"us.000000.00000.000.000000","_creator":"us.tarzan916104","_modifier":"us.tarzan916104","createdDate":1431026644072,"createdIp":"127.0.0.1","modifiedDate":1431026644072,"modifiedIp":"127.0.0.1","location":{"lat":72.31745,"lng":-25.083896,"geometry":[-25.083896,72.31745],"accuracy":25},"bssid":"Beacon4.916104"}]}}
+{"method":"post","url":"/v1/data/patches","body":{"data":{"_id":"pa.river916104","name":"River916104","photo":{"prefix":"picture.jpg","source":"aircandi.users"},"location":{"lat":72.31715,"lng":-25.083896}}}}
+{"method":"post","url":"/v1/data/patches","body":{"data":{"_id":"pa.treehouse916104","name":"Treehouse916104","visibility":"private","location":{"lat":72.31725,"lng":-25.083896}}}}
+{"method":"post","url":"/v1/data/patches","body":{"data":{"_id":"pa.janehouse916104","name":"Janehouse916104","visibility":"private","location":{"lat":72.31735,"lng":-25.083896}}}}
+{"method":"get","url":"/v1/data/patches/pa.river916104"}
+{"method":"get","url":"/v1/data/patches/pa.janehouse916104"}
+{"method":"post","url":"/v1/data/links","body":{"data":{"_to":"pa.river916104","_from":"us.tarzan916104","type":"watch"}}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.tarzanToRiver916104","description":"Good water, bad crocs"},"links":[{"_to":"pa.river916104","type":"content"}],"test":true}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.janeToRiver916104","description":"I love swimming"},"links":[{"_to":"pa.river916104","type":"content"}],"test":true}}
+{"method":"post","url":"/v1/find/patches/pa.river916104","body":{"linked":{"from":"messages","type":"content"}}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.tarzanToTreehouse916104","description":"Check out my hammock"},"links":[{"_to":"pa.treehouse916104","type":"content"}],"test":true}}
+{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.janeToJanehouse916104","description":"Checkout my bed"},"links":[{"_to":"pa.janehouse916104","type":"content"}],"returnNotifications":true}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.tarzanToJanehouse916104","description":"What is bed?"},"links":[{"_to":"pa.janehouse916104","type":"content"}],"test":true}}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver916104"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver916104"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToRiver916104"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse916104"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse916104"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse"}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pa.river916104","cursor":{"linkTypes":["watch"],"direction":"in"}}}
+{"method":"post","url":"/v1/find/patches/pa.river916104","body":{"linked":{"from":"users","filter":{"type":"watch"},"linkFields":{}}}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pa.river916104","cursor":{"linkTypes":["content"],"direction":"in"}}}
+{"method":"post","url":"/v1/find/patches/pa.river916104","body":{"linked":[{"from":"messages","type":"content"}]}}
+{"method":"post","url":"/v1/data/links","body":{"data":{"_id":"li.tarzanInvitesHimselfOver916104","_from":"pa.janehouse916104","_to":"us.tarzan916104","type":"share"}}}
+{"method":"post","url":"/v1/data/links","body":{"data":{"_id":"li.tarzanWatchesJaneHouse916104","_from":"us.tarzan916104","_to":"pa.janehouse916104","type":"watch"}}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pa.janehouse916104","cursor":{"linkTypes":["content"],"direction":"in"}}}
+{"method":"post","url":"/v1/find/patches/pa.janehouse916104","body":{"linked":{"from":"messages","filter":{"type":"messages"}}}}
+{"method":"post","url":"/v1/data/links/li.tarzanWatchesJaneHouse916104","body":{"data":{"enabled":true}}}
+{"method":"post","url":"/v1/data/links/li.tarzanWatchesJaneHouse916104","body":{"data":{"enabled":true}}}
+{"method":"post","url":"/v1/find/patches/pa.janehouse916104","body":{"linked":{"from":"messages","type":"content"}}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.tarzanInvite916104","type":"root","description":"Check out my treehouse"},"links":[{"_id":"li.toTreehouseFromTarzanInvite916104","_to":"pa.treehouse916104","type":"share"},{"_id":"li.toJaneFromTarzanInvite916104","_to":"us.jane916104","type":"share"}]}}
+{"method":"get","url":"/v1/data/links/li.toJaneFromTarzanInvite916104"}
+{"method":"get","url":"/v1/data/links/li.toTreehouseFromTarzanInvite916104"}
+{"method":"post","url":"/v1/data/links","body":{"data":{"_to":"pa.treehouse916104","_from":"us.jane916104","type":"watch"}}}
 {"method":"get","url":"/v1/find/messages"}
-{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse625195"}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"comment","_id":"co.janeCommentOnTarzanMsg625195","description":"Trust me, you will like bed"},"links":[{"_to":"me.tarzanToTreehouse625195","type":"content"}],"returnNotifications":true}}
-{"method":"post","url":"/v1/do/insertEntity","body":{"entity":{"schema":"message","_id":"me.janeToTreehouse625195","description":"Hmm, maybe hammock is ok afterall..."},"links":[{"_to":"pl.treehouse625195","type":"content"}]}}
-{"method":"post","url":"/v1/data/messages/me.janeToTreehouse625195","body":{"data":{"description":"On second thought, hammock sucks"}}}
-{"method":"delete","url":"/v1/data/messages/me.janeToTreehouse625195"}
-{"method":"get","url":"/v1/data/links?query%5B_from%5D=me.janeToTreehouse625195&query%5B_to%5D=pl.treehouse625195"}
+{"method":"get","url":"/v1/find/messages/me.tarzanToTreehouse916104"}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.janeMessageOnTarzanMsg916104","description":"Trust me, you will like bed"},"links":[{"_to":"me.tarzanToTreehouse916104","type":"content"}]}}
+{"method":"post","url":"/v1/data/messages","body":{"data":{"_id":"me.janeToTreehouse916104","description":"Hmm, maybe hammock is ok afterall..."},"links":[{"_to":"pa.treehouse916104","type":"content"}]}}
+{"method":"post","url":"/v1/data/messages/me.janeToTreehouse916104","body":{"data":{"description":"On second thought, hammock sucks"}}}
+{"method":"delete","url":"/v1/data/messages/me.janeToTreehouse916104"}
+{"method":"get","url":"/v1/data/links?query%5B_from%5D=me.janeToTreehouse916104&query%5B_to%5D=pa.treehouse916104"}
+{"method":"post","url":"/v1/data/patches","body":{"data":{"_id":"pa.maryhouse916104","name":"Maryhouse916104","visibility":"private","location":{"lat":72.31745,"lng":-25.083896}},"links":[{"_from":"us.mary916104","type":"create"},{"_from":"us.mary916104","type":"watch"},{"_to":"pl.jungle916104","type":"proximity"},{"_to":"be.Beacon3.916104","type":"proximity"},{"_to":"be.Beacon1.916104","type":"bogus"}]}}
+{"method":"get","url":"/v1/user/getNotifications?limit=20"}
+{"method":"post","url":"/v1/find/users/us.tarzan916104,us.jane916104,us.mary916104","body":{"refs":"name,photo","linked":[{"to":"patches","type":"watch","fields":"name,visibility,photo","linkFields":"enabled","linked":[{"from":"messages","type":"content","fields":"description,photo","linkFields":false},{"from":"users","type":"watch","count":true},{"from":"users","type":"like","count":true}]}]}}
+{"method":"post","url":"/v1/find/patches/pa.river916104","body":{"refs":"_id,name,photo,schema","linked":[{"from":"messages","type":"content","linkFields":"_id"}]}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"pa.river916104","cursor":{"where":{"enabled":true},"skip":0,"sort":{"modifiedDate":-1},"schemas":["message"],"limit":50,"linkTypes":["content"],"direction":"in"},"links":{"shortcuts":true,"active":[{"links":true,"count":true,"schema":"message","type":"content","limit":1,"direction":"both"},{"links":true,"count":true,"schema":"patch","type":"content","limit":1,"direction":"out"},{"links":true,"count":true,"schema":"patch","type":"share","limit":1,"direction":"out"},{"links":true,"count":true,"schema":"message","type":"share","limit":1,"direction":"out"},{"links":true,"count":true,"schema":"user","type":"share","limit":5,"direction":"out"},{"where":{"_from":"us.tarzan916104"},"links":true,"count":true,"schema":"user","type":"like","limit":1,"direction":"in"}]}}}
+{"method":"post","url":"/v1/find/users/us.tarzan916104","body":{"refs":true,"linked":[{"to":"patches","type":"watch","limit":30,"fields":"name,schema,visibility","linked":[{"to":"beacons","type":"proximity","limit":10},{"to":"places","type":"proximity","fields":"name,schema,category,photo","limit":1},{"from":"messages","type":"content","fields":"schema,description","limit":2},{"from":"messages","type":"content","count":true},{"from":"users","type":"like","count":true},{"from":"users","type":"watch","filter":{"enabled":true},"count":true}]}]}}
+{"method":"post","url":"/v1/do/getEntitiesForEntity","body":{"entityId":"us.tarzan916104","cursor":{"where":{"enabled":true},"skip":0,"sort":{"modifiedDate":-1},"schemas":["patch"],"limit":30,"linkTypes":["watch"],"direction":"out"},"links":{"shortcuts":true,"active":[{"links":true,"count":true,"schema":"beacon","type":"proximity","limit":10,"direction":"out"},{"links":true,"count":true,"schema":"place","type":"proximity","limit":1,"direction":"out"},{"links":true,"count":true,"schema":"message","type":"content","limit":2,"direction":"both"},{"where":{"_from":"us.tarzan916104"},"links":true,"count":true,"schema":"user","type":"watch","limit":1,"direction":"in"},{"where":{"_from":"us.tarzan916104"},"links":true,"count":true,"schema":"user","type":"like","limit":1,"direction":"in"},{"where":{"_creator":"us.tarzan916104"},"links":true,"count":true,"schema":"message","type":"content","limit":1,"direction":"in"}]}}}
+{"method":"post","url":"/v1/patches/near","body":{"location":{"lat":72.31715,"lng":-25.083896,"accuracy":1000,"provider":"fused"},"radius":10000,"installId":"todo","limit":50,"rest":true,"linked":[{"to":"beacons","type":"proximity","limit":10},{"to":"places","type":"proxmity","limit":10},{"from":"messages","type":"content","limit":2},{"from":"messages","type":"content","count":true},{"from":"users","type":"like","count":true},{"from":"users","type":"watch","count":true}]}}
+{"method":"post","url":"/v1/patches/near","body":{"getEntities":true,"location":{"lat":72.31715,"lng":-25.083896,"accuracy":1000,"provider":"fused"},"radius":10000,"installId":"todo","limit":50,"links":{"shortcuts":true,"active":[{"links":true,"count":true,"schema":"beacon","type":"proximity","limit":10,"direction":"out"},{"links":true,"count":true,"schema":"place","type":"proximity","limit":1,"direction":"out"},{"links":true,"count":true,"schema":"message","type":"content","limit":2,"direction":"both"},{"where":{"_from":"us.130820.80231.131.599884"},"links":true,"count":true,"schema":"user","type":"watch","limit":1,"direction":"in"},{"where":{"_from":"us.130820.80231.131.599884"},"links":true,"count":true,"schema":"user","type":"like","limit":1,"direction":"in"},{"where":{"_creator":"us.130820.80231.131.599884"},"links":true,"count":true,"schema":"message","type":"content","limit":1,"direction":"in"}]}}}
+{"method":"get","url":"/v1/data/users/us.jane916104"}
+{"method":"get","url":"/v1/data/patches/pa.treehouse916104"}
+{"method":"post","url":"/v1/data/links","body":{"data":{"_to":"pa.treehouse916104","_from":"us.jane916104","type":"like"}}}
+{"method":"get","url":"/v1/data/users/us.jane916104"}
+{"method":"get","url":"/v1/data/patches/pa.treehouse916104"}
