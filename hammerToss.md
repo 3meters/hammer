@@ -478,8 +478,10 @@ Mean time: 525
 Median time: 380
 
 
-Home mac, local, mongo 2.4.11
+Home mac, local
 ------------------
+
+mongodb version 2.4.11
 
 Result: 
 
@@ -541,5 +543,57 @@ Max time: 1673
 Mean time: 165
 Median time: 83
 
+(db second run)
+Runs: 444
+Requests: 16997
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 361
+Requests per second: 283
+Min time: 19
+Max time: 1440
+Mean time: 176
+Median time: 88
+
+(db thrid run)
+Runs: 438
+Requests: 16720
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 355
+Requests per second: 278
+Min time: 19
+Max time: 1999
+Mean time: 179
+Median time: 89
+
+(Clean db, mongodb version 2.6.5)
+
+Results: 
+
+Seconds: 60
+Runs: 466
+Requests: 17760
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 376
+Requests per second: 296
+Min time: 18
+Max time: 2802
+Mean time: 168
+Median time: 80
+
+(second run on db, same config)
+Seconds: 60
+Runs: 466
+Requests: 17807
+Errors: 0
+Fail Rate: 0.00
+KBytes per second: 378
+Requests per second: 296
+Min time: 19
+Max time: 1338
+Mean time: 168
+Median time: 80
 
 
