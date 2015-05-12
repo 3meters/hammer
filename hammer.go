@@ -42,13 +42,22 @@ type Config struct {
 		Password  string `json:"password"`
 		InstallId string `json:"installId"`
 	}
+	TestParams  TestParams
 	Cred        string // Set after authentication
-	Seed        string
 	Hammers     int
 	Seconds     int
 	MaxProcs    int
 	RequestPath string
+	Timeout     int
 	Log         bool // output requests and responses to stdout
+}
+
+// These params separate test runs from each other so that
+// Unique keys and locations are moved for each test run
+type TestParams struct {
+	Seed string
+	Lat  int
+	Lng  int
 }
 
 // Module global
@@ -60,6 +69,7 @@ type Result struct {
 	Fail      int
 	ByteCount int64
 	Times     Times
+	Timeouts  Timeouts
 }
 
 type Time struct {
@@ -74,6 +84,14 @@ type Times []Time
 func (t Times) Len() int           { return len(t) }
 func (t Times) Swap(i, j int)      { t[j], t[i] = t[i], t[j] }
 func (t Times) Less(i, j int) bool { return t[i].Measured < t[j].Measured }
+
+type Timeout struct {
+	Tag    string
+	Method string
+	Url    string
+}
+
+type Timeouts []Times
 
 // Set command line flags
 func init() {
@@ -113,6 +131,7 @@ func main() {
 		Seconds:     5,
 		MaxProcs:    1,
 		RequestPath: "request.log",
+		Timeout:     0,
 	}
 
 	err = json.Unmarshal(content, &config)
@@ -179,7 +198,7 @@ func main() {
 	// Set max procs
 	runtime.GOMAXPROCS(config.MaxProcs)
 
-	// Start the collector service
+	// Start the results collector service
 	ch := make(chan Result, config.Hammers)
 	go sum(ch, config.Hammers)
 
@@ -195,42 +214,52 @@ func main() {
 		fmt.Print(".")
 		time.Sleep(5 * time.Second)
 	}
-
 }
 
-// sum: read and sum the results from the channel
+// sum: read and sum the results from a result channel
 func sum(ch chan Result, expected int) {
+
+	// create an aggregate result
 	total := Result{}
+
+	// Compute the result as returned by each chanel
 	for i := 0; i < expected; i++ {
 		result := <-ch
 		total.Runs += result.Runs
 		total.Succede += result.Succede
 		total.Fail += result.Fail
 		total.ByteCount += result.ByteCount
-		total.Times = append(total.Times, result.Times...)
+		total.Times = append(total.Times, result.Times...) // hmm, not sure I need the ...
+		total.Timeouts = append(total.Timeouts, result.Timeouts...)
 	}
 
 	close(ch)
+
+	// Compute some stats
 	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
 	sort.Sort(total.Times)
 	min := total.Times[0].Measured
 	max := total.Times[len(total.Times)-1].Measured
 	median := total.Times[len(total.Times)/2].Measured
-	sum := 0
+	sumMeasured := 0
+	sumReported := 0
 	for i := range total.Times {
-		sum += total.Times[i].Measured
+		sumReported += total.Times[i].Reported
+		sumMeasured += total.Times[i].Measured
 	}
-	mean := int(sum / len(total.Times))
+	meanMeasured := int(sumMeasured / len(total.Times))
+	meanLatency := int((sumMeasured - sumReported) / len(total.Times))
 
 	fmt.Printf("\n\nResults: \n\n")
 	fmt.Printf("Seconds: %v\n", config.Seconds)
 	fmt.Printf("Runs: %v\n", total.Runs)
 	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
 	fmt.Printf("Errors: %v\n", total.Fail)
+	fmt.Printf("Timeouts: %v\n", len(total.Timeouts))
 	fmt.Printf("Fail Rate: %.2f\n", failRate)
 	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
 	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
-	fmt.Printf("Min time: %v\nMax time: %v\nMean time: %v\nMedian time: %v\n\n", min, max, mean, median)
+	fmt.Printf("Min time: %v\nMax time: %v\nMean time: %v\nMean latency: %v\nMedian time: %v\n\n", min, max, meanMeasured, meanLatency, median)
 
 	os.Exit(0)
 }
@@ -248,18 +277,24 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		stop = true
 	}()
 
-	newSeed := ""
+	runParams := TestParams{}
+
 	cReqs := len(requests)
 
 	for i := 0; stop == false; i++ {
 
-		if i >= cReqs { // start over
+		if i >= cReqs { // start over sending requests from the request log
 			result.Runs++
 			i = 0
 		}
 
+		// All requests within a request log share a random seed in
+		// fields that are required to be unique in the db.  For each
+		// run of the hammer, replace those params with new, randomly
+		// generated ones
 		if i == 0 {
-			newSeed = genNewSeed()
+			runParams = genTestParams()
+			fmt.Printf("runParams: %v", runParams)
 		}
 
 		logReq := requests[i]
@@ -273,10 +308,23 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		url := config.Host + logReq.Url + delim + config.Cred
 
 		// Replace the seed in urls with our newly generated seed
-		url = strings.Replace(url, config.Seed, newSeed, -1)
+		url = strings.Replace(url, config.TestParams.Seed, runParams.Seed, -1)
 
 		// Same for the body
-		reqBody := bytes.Replace(logReq.Body, []byte(config.Seed), []byte(newSeed), -1)
+		reqBody := bytes.Replace(logReq.Body, []byte(config.TestParams.Seed), []byte(runParams.Seed), -1)
+
+		// Move config request location to someplace else on earth
+		var target, replace []byte
+		for i := range config.TestParams.Lat {
+			target = []byte(fmt.Sprintf("%.5f", config.TestParams.Lat[i]))
+			replace = []byte(fmt.Sprintf("%.5f", runParams.Lat[i]))
+			reqBody = bytes.Replace(reqBody, target, replace, 1)
+		}
+		for i := range config.TestParams.Lng {
+			target = []byte(fmt.Sprintf("%.5f", config.TestParams.Lng[i]))
+			replace = []byte(fmt.Sprintf("%.5f", runParams.Lng[i]))
+			reqBody = bytes.Replace(reqBody, target, replace, 1)
+		}
 
 		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
 		if reqErr != nil {
@@ -427,11 +475,38 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 }
 
 // Generate a new random numeric string
-func genNewSeed() string {
-	seedStr := strconv.FormatInt(rand.Int63(), 10)
-	if len(seedStr) > 7 {
+func genTestParams() TestParams {
+
+	testParams := TestParams{}
+
+	seed := strconv.FormatInt(rand.Int63(), 10)
+	if len(seed) > 7 {
 		// grab the last 8 digits
-		seedStr = seedStr[len(seedStr)-8 : len(seedStr)-1]
+		seed = seed[len(seed)-8 : len(seed)-1]
 	}
-	return seedStr
+	testParams.Seed = seed
+
+	const max = 100000
+	seed1 := rand.Int31n(max)
+	seed2 := rand.Int31n(max)
+
+	// Compute a new random point on earth
+	var lat, lng []float64
+	lat = append(lat, float64((seed1%179)-89)+(float64(max)/float64(seed2)))
+	lng = append(lng, float64((seed2%359)-179)+(float64(max)/float64(seed1)))
+
+	fmt.Printf("config Lat:\n%v\n", config.TestParams.Lat)
+	for i := 1; i < len(config.TestParams.Lat); i++ {
+		lat = append(lat, lat[i-1]+(config.TestParams.Lat[i]-config.TestParams.Lat[i-1]))
+	}
+
+	for i := 1; i < len(config.TestParams.Lng); i++ {
+		lng = append(lng, lng[i-1]+(config.TestParams.Lng[i]-config.TestParams.Lng[i-1]))
+	}
+
+	testParams.Lat = lat
+	testParams.Lng = lng
+
+	fmt.Printf("%v\n\n", testParams)
+	return testParams
 }

@@ -5,10 +5,15 @@
     "Password": "admin",
     "InstallId": "1"
   },
-  "Seed": "625195",
-  "Hammers": 20,
-  "Seconds": 30,
+  "TestParams": {
+    "Seed": "000000",
+    "Lat": 0.0,
+    "Lng": 0.0
+  },
+  "Hammers": 5,
+  "Seconds": 60,
   "MaxProcs": 1,
   "RequestPath": "request.log",
+  "Timeout": 5000,
   "Log": false
 }
