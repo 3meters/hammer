@@ -56,8 +56,8 @@ type Config struct {
 // Unique keys and locations are moved for each test run
 type TestParams struct {
 	Seed string
-	Lat  int
-	Lng  int
+	Lat  string
+	Lng  string
 }
 
 // Module global
@@ -216,173 +216,6 @@ func main() {
 	}
 }
 
-// sum: read and sum the results from a result channel
-func sum(ch chan Result, expected int) {
-
-	// create an aggregate result
-	total := Result{}
-
-	// Compute the result as returned by each chanel
-	for i := 0; i < expected; i++ {
-		result := <-ch
-		total.Runs += result.Runs
-		total.Succede += result.Succede
-		total.Fail += result.Fail
-		total.ByteCount += result.ByteCount
-		total.Times = append(total.Times, result.Times...) // hmm, not sure I need the ...
-		total.Timeouts = append(total.Timeouts, result.Timeouts...)
-	}
-
-	close(ch)
-
-	// Compute some stats
-	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
-	sort.Sort(total.Times)
-	min := total.Times[0].Measured
-	max := total.Times[len(total.Times)-1].Measured
-	median := total.Times[len(total.Times)/2].Measured
-	sumMeasured := 0
-	sumReported := 0
-	for i := range total.Times {
-		sumReported += total.Times[i].Reported
-		sumMeasured += total.Times[i].Measured
-	}
-	meanMeasured := int(sumMeasured / len(total.Times))
-	meanLatency := int((sumMeasured - sumReported) / len(total.Times))
-
-	fmt.Printf("\n\nResults: \n\n")
-	fmt.Printf("Seconds: %v\n", config.Seconds)
-	fmt.Printf("Runs: %v\n", total.Runs)
-	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
-	fmt.Printf("Errors: %v\n", total.Fail)
-	fmt.Printf("Timeouts: %v\n", len(total.Timeouts))
-	fmt.Printf("Fail Rate: %.2f\n", failRate)
-	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
-	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
-	fmt.Printf("Min time: %v\nMax time: %v\nMean time: %v\nMean latency: %v\nMedian time: %v\n\n", min, max, meanMeasured, meanLatency, median)
-
-	os.Exit(0)
-}
-
-// run: fire requests at the target with config credentials
-func run(client *http.Client, requests []Request, ch chan Result) {
-
-	result := Result{}
-
-	stop := false
-
-	// Start the clock
-	go func() {
-		time.Sleep(time.Duration(config.Seconds) * time.Second)
-		stop = true
-	}()
-
-	runParams := TestParams{}
-
-	cReqs := len(requests)
-
-	for i := 0; stop == false; i++ {
-
-		if i >= cReqs { // start over sending requests from the request log
-			result.Runs++
-			i = 0
-		}
-
-		// All requests within a request log share a random seed in
-		// fields that are required to be unique in the db.  For each
-		// run of the hammer, replace those params with new, randomly
-		// generated ones
-		if i == 0 {
-			runParams = genTestParams()
-			fmt.Printf("runParams: %v", runParams)
-		}
-
-		logReq := requests[i]
-
-		delim := "?"
-		if strings.Contains(logReq.Url, "?") {
-			delim = "&"
-		}
-
-		method := strings.ToUpper(logReq.Method)
-		url := config.Host + logReq.Url + delim + config.Cred
-
-		// Replace the seed in urls with our newly generated seed
-		url = strings.Replace(url, config.TestParams.Seed, runParams.Seed, -1)
-
-		// Same for the body
-		reqBody := bytes.Replace(logReq.Body, []byte(config.TestParams.Seed), []byte(runParams.Seed), -1)
-
-		// Move config request location to someplace else on earth
-		var target, replace []byte
-		for i := range config.TestParams.Lat {
-			target = []byte(fmt.Sprintf("%.5f", config.TestParams.Lat[i]))
-			replace = []byte(fmt.Sprintf("%.5f", runParams.Lat[i]))
-			reqBody = bytes.Replace(reqBody, target, replace, 1)
-		}
-		for i := range config.TestParams.Lng {
-			target = []byte(fmt.Sprintf("%.5f", config.TestParams.Lng[i]))
-			replace = []byte(fmt.Sprintf("%.5f", runParams.Lng[i]))
-			reqBody = bytes.Replace(reqBody, target, replace, 1)
-		}
-
-		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
-		if reqErr != nil {
-			log.Fatal(reqErr)
-		}
-		req.Header.Set("Content-Type", contentJson)
-
-		// Start the request timer
-		before := time.Now().UnixNano()
-		res, err := client.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer res.Body.Close()
-
-		// Record the measured time the response took to return
-		after := time.Now().UnixNano()
-
-		bodyBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if 200 <= res.StatusCode && 400 > res.StatusCode {
-			result.Succede++
-		} else {
-			result.Fail++
-		}
-		result.ByteCount += int64(len(bodyBytes))
-
-		// Parse the request tag and reported time from the response body
-		body := struct {
-			Tag  string  `json:"tag"`
-			Time float32 `json:"time"`
-		}{} // anonymous struct type
-
-		err = json.Unmarshal(bodyBytes, &body)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Add the respone time to the result
-		time := Time{
-			Tag:      body.Tag,
-			Reported: int(body.Time * 1000),           // miliseconds from fractional seconds
-			Measured: int((after - before) / 1000000), // miliseconds from nanoseconds
-		}
-		result.Times = append(result.Times, time)
-
-		if config.Log == true {
-			fmt.Printf("\n%d %s %s\n", res.StatusCode, method, url)
-			fmt.Printf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured)
-		}
-	}
-
-	ch <- result
-}
-
 // parseRequestLog: parse our modified csv log format
 func parseRequestLog(file *os.File) ([]Request, error) {
 
@@ -474,18 +307,174 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 	return credentials, nil
 }
 
-// Generate a new random numeric string
+// Generate a new random request seed and location
 func genTestParams() TestParams {
-
-	seed := strconv.FormatInt(rand.Int31(), 10)
-	if len(seed) > 7 {
-		// grab the last 8 digits
-		seed = seed[len(seed)-8 : len(seed)-1]
-	}
-
 	return TestParams{
-		Seed: seed,
-		Lat:  (rand.Int31() % 179) - 89,  // Random latitude int
-		Lng:  (rand.Int31() % 359) - 179, // Random longitude int
+		Seed: strconv.FormatInt(rand.Int63n(100000000), 10),
+		Lat:  strconv.Itoa((rand.Int() % 179) - 89),
+		Lng:  strconv.Itoa((rand.Int() % 359) - 179),
 	}
+}
+
+// run: fire requests at the target with config credentials
+func run(client *http.Client, requests []Request, ch chan Result) {
+
+	result := Result{}
+
+	stop := false
+
+	// Start the clock
+	go func() {
+		time.Sleep(time.Duration(config.Seconds) * time.Second)
+		stop = true
+	}()
+
+	runParams := TestParams{}
+
+	cReqs := len(requests)
+
+	for i := 0; stop == false; i++ {
+
+		if i >= cReqs { // start over sending requests from the request log
+			result.Runs++
+			i = 0
+		}
+
+		// All requests within a request log share a random seed in
+		// fields that are required to be unique in the db.  For each
+		// run of the hammer, replace those params with new, randomly
+		// generated ones
+		if i == 0 {
+			runParams = genTestParams()
+		}
+
+		logReq := requests[i]
+
+		delim := "?"
+		if strings.Contains(logReq.Url, "?") {
+			delim = "&"
+		}
+
+		method := strings.ToUpper(logReq.Method)
+		url := config.Host + logReq.Url + delim + config.Cred
+
+		// Replace the seed in urls with our newly generated seed
+		url = strings.Replace(url, config.TestParams.Seed, runParams.Seed, -1)
+
+		// Same for the body
+		reqBody := bytes.Replace(logReq.Body, []byte(config.TestParams.Seed), []byte(runParams.Seed), -1)
+
+		// Move request location to another latitude
+		target := []byte("\"lat\":" + config.TestParams.Lat)
+		replace := []byte("\"lat\":" + runParams.Lat)
+		reqBody = bytes.Replace(reqBody, target, replace, -1)
+
+		// Same with longitude
+		target = []byte("\"lng\":" + config.TestParams.Lng)
+		replace = []byte("\"lng\":" + runParams.Lng)
+		reqBody = bytes.Replace(reqBody, target, replace, -1)
+
+		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
+		if reqErr != nil {
+			log.Fatal(reqErr)
+		}
+		req.Header.Set("Content-Type", contentJson)
+
+		// Start the request timer
+		before := time.Now().UnixNano()
+		res, err := client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer res.Body.Close()
+
+		// Record the measured time the response took to return
+		after := time.Now().UnixNano()
+
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if 200 <= res.StatusCode && 400 > res.StatusCode {
+			result.Succede++
+		} else {
+			result.Fail++
+		}
+		result.ByteCount += int64(len(bodyBytes))
+
+		// Parse the request tag and reported time from the response body
+		body := struct {
+			Tag  string  `json:"tag"`
+			Time float32 `json:"time"`
+		}{} // anonymous struct type
+
+		err = json.Unmarshal(bodyBytes, &body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Add the respone time to the result
+		time := Time{
+			Tag:      body.Tag,
+			Reported: int(body.Time * 1000),           // miliseconds from fractional seconds
+			Measured: int((after - before) / 1000000), // miliseconds from nanoseconds
+		}
+		result.Times = append(result.Times, time)
+
+		if config.Log == true {
+			fmt.Printf("\n%d %s %s\n", res.StatusCode, method, url)
+			fmt.Printf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured)
+		}
+	}
+
+	ch <- result
+}
+
+// sum: read and sum the results from a result channel
+func sum(ch chan Result, expected int) {
+
+	// create an aggregate result
+	total := Result{}
+
+	// Compute the result as returned by each chanel
+	for i := 0; i < expected; i++ {
+		result := <-ch
+		total.Runs += result.Runs
+		total.Succede += result.Succede
+		total.Fail += result.Fail
+		total.ByteCount += result.ByteCount
+		total.Times = append(total.Times, result.Times...) // hmm, not sure I need the ...
+		total.Timeouts = append(total.Timeouts, result.Timeouts...)
+	}
+
+	close(ch)
+
+	// Compute some stats
+	failRate := float32(total.Fail) / float32(total.Succede+total.Fail)
+	sort.Sort(total.Times)
+	min := total.Times[0].Measured
+	max := total.Times[len(total.Times)-1].Measured
+	median := total.Times[len(total.Times)/2].Measured
+	sumMeasured := 0
+	sumReported := 0
+	for i := range total.Times {
+		sumReported += total.Times[i].Reported
+		sumMeasured += total.Times[i].Measured
+	}
+	meanMeasured := int(sumMeasured / len(total.Times))
+	meanLatency := int((sumMeasured - sumReported) / len(total.Times))
+
+	fmt.Printf("\n\nResults: \n\n")
+	fmt.Printf("Seconds: %v\n", config.Seconds)
+	fmt.Printf("Runs: %v\n", total.Runs)
+	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
+	fmt.Printf("Errors: %v\n", total.Fail)
+	fmt.Printf("Timeouts: %v\n", len(total.Timeouts))
+	fmt.Printf("Fail Rate: %.2f\n", failRate)
+	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
+	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)
+	fmt.Printf("Min time: %v\nMax time: %v\nMean time: %v\nMean latency: %v\nMedian time: %v\n\n", min, max, meanMeasured, meanLatency, median)
+
+	os.Exit(0)
 }
