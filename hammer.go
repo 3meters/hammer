@@ -477,36 +477,15 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 // Generate a new random numeric string
 func genTestParams() TestParams {
 
-	testParams := TestParams{}
-
-	seed := strconv.FormatInt(rand.Int63(), 10)
+	seed := strconv.FormatInt(rand.Int31(), 10)
 	if len(seed) > 7 {
 		// grab the last 8 digits
 		seed = seed[len(seed)-8 : len(seed)-1]
 	}
-	testParams.Seed = seed
 
-	const max = 100000
-	seed1 := rand.Int31n(max)
-	seed2 := rand.Int31n(max)
-
-	// Compute a new random point on earth
-	var lat, lng []float64
-	lat = append(lat, float64((seed1%179)-89)+(float64(max)/float64(seed2)))
-	lng = append(lng, float64((seed2%359)-179)+(float64(max)/float64(seed1)))
-
-	fmt.Printf("config Lat:\n%v\n", config.TestParams.Lat)
-	for i := 1; i < len(config.TestParams.Lat); i++ {
-		lat = append(lat, lat[i-1]+(config.TestParams.Lat[i]-config.TestParams.Lat[i-1]))
+	return TestParams{
+		Seed: seed,
+		Lat:  (rand.Int31() % 179) - 89,  // Random latitude int
+		Lng:  (rand.Int31() % 359) - 179, // Random longitude int
 	}
-
-	for i := 1; i < len(config.TestParams.Lng); i++ {
-		lng = append(lng, lng[i-1]+(config.TestParams.Lng[i]-config.TestParams.Lng[i-1]))
-	}
-
-	testParams.Lat = lat
-	testParams.Lng = lng
-
-	fmt.Printf("%v\n\n", testParams)
-	return testParams
 }
