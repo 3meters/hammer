@@ -1,0 +1,18 @@
+{
+  "Host": "https://localhost:8443",
+  "Signin": {
+    "Email": "admin",
+    "Password": "Larissa1970",
+    "InstallId": "1"
+  },
+  "TestParams": {
+    "Seed": "916104",
+    "Lat": "72",
+    "Lng": "-25"
+  },
+  "Hammers": 1,
+  "Seconds": 5,
+  "MaxProcs": 1,
+  "RequestPath": "request.log",
+  "Log": false
+}
