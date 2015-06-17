@@ -14,5 +14,6 @@
   "Seconds": 30,
   "MaxProcs": 1,
   "RequestPath": "request.log",
-  "Log": false
+  "Log": -1,
+  "LogMax": 1000
 }

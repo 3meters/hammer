@@ -49,7 +49,8 @@ type Config struct {
 	MaxProcs    int
 	RequestPath string
 	Timeout     int
-	Log         bool // output requests and responses to stdout
+	Log         int // Log requsests taking more the Log miliseconds, -1 for no logging
+	LogMax      int // max log entries
 }
 
 // These params separate test runs from each other so that
@@ -60,8 +61,9 @@ type TestParams struct {
 	Lng  string
 }
 
-// Module global
+// Module globals
 var config Config
+var cLogged int
 
 type Result struct {
 	Runs      int
@@ -132,6 +134,8 @@ func main() {
 		MaxProcs:    1,
 		RequestPath: "request.log",
 		Timeout:     0,
+		Log:         -1,
+		LogMax:      1000,
 	}
 
 	err = json.Unmarshal(content, &config)
@@ -149,10 +153,19 @@ func main() {
 	}
 	defer requestFile.Close()
 
+	// Open the request log
 	requests, err := parseRequestLog(requestFile)
 	if err != nil {
 		log.Fatal("Error parsing "+config.RequestPath+": ", err)
 	}
+
+	// Create the hammer log file
+	hammerLog, err := os.Create("hammer.log")
+	if err != nil {
+		log.Fatal("Could not create hammer.log")
+	}
+	defer hammerLog.Close()
+	cLogged = 0
 
 	// Configure a transport that accepts self-singed certificates
 	// Similar to curl --insecure
@@ -166,7 +179,7 @@ func main() {
 	if config.Host == "" {
 		log.Fatalln("config.Host is required")
 	}
-	fmt.Print("Pinging host... ")
+	fmt.Print("Pinging " + config.Host + "... ")
 	res, err := client.Get(config.Host)
 	if err != nil {
 		log.Fatal(err)
@@ -188,7 +201,7 @@ func main() {
 	fmt.Println("Ok")
 
 	// Autheticate and add the user credentail query string to config
-	fmt.Print("Authenticating... ")
+	fmt.Print("Authenticating admin... ")
 	config.Cred, err = authenticate(client, &config)
 	if err != nil {
 		log.Fatal(err)
@@ -298,10 +311,6 @@ func authenticate(client *http.Client, config *Config) (string, error) {
 		return "", err
 	}
 
-	if config.Log == true {
-		fmt.Printf("%s\n%#v\n", "Signin response: ", body)
-	}
-
 	credentials := "user=" + body.Session.UserId + "&session=" + body.Session.SessionId
 
 	return credentials, nil
@@ -374,6 +383,7 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		replace = []byte("\"lng\":" + runParams.Lng)
 		reqBody = bytes.Replace(reqBody, target, replace, -1)
 
+		// Create a request
 		req, reqErr := http.NewRequest(method, url, bytes.NewReader(reqBody))
 		if reqErr != nil {
 			log.Fatal(reqErr)
@@ -417,12 +427,12 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		// Add the respone time to the result
 		time := Time{
 			Tag:      body.Tag,
-			Reported: int(body.Time * 1000),           // miliseconds from fractional seconds
+			Reported: int(body.Time),                  // miliseconds
 			Measured: int((after - before) / 1000000), // miliseconds from nanoseconds
 		}
 		result.Times = append(result.Times, time)
 
-		if config.Log == true {
+		if config.Log >= 0 && config.Log < time.Measured && cLogged < config.LogMax {
 			fmt.Printf("\n%d %s %s\n", res.StatusCode, method, url)
 			fmt.Printf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured)
 		}
