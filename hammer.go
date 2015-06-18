@@ -63,6 +63,7 @@ type TestParams struct {
 
 // Module globals
 var config Config
+var hammerLog *os.File
 var cLogged int
 
 type Result struct {
@@ -143,11 +144,11 @@ func main() {
 		log.Fatal("Config file not valid JSON: ", err)
 	}
 
-	fmt.Println("Config:")
-	_ = printJson(content)
+	fmt.Printf("Config:\n%s\n", sprintJson(content))
 
 	// Open and parse the request log that will be fired at the target
 	requestFile, err := os.Open(config.RequestPath)
+
 	if err != nil {
 		log.Fatalln("Could not read request file "+config.RequestPath, err)
 	}
@@ -160,7 +161,7 @@ func main() {
 	}
 
 	// Create the hammer log file
-	hammerLog, err := os.Create("hammer.log")
+	hammerLog, err = os.Create("hammer.log")
 	if err != nil {
 		log.Fatal("Could not create hammer.log")
 	}
@@ -265,15 +266,14 @@ func parseRequestLog(file *os.File) ([]Request, error) {
 	return requests, nil
 }
 
-// printJson: prettyPrint JSON to stdout
-func printJson(data []byte) error {
+// sprintJson: prettyPrint JSON to stdout
+func sprintJson(data []byte) string {
 	var indented bytes.Buffer
 	err := json.Indent(&indented, data, "", "  ")
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	fmt.Printf("%v\n", indented.String())
-	return nil
+	return fmt.Sprintf("%v\n", indented.String())
 }
 
 // Authenticate the user specified in config.json
@@ -433,8 +433,10 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		result.Times = append(result.Times, time)
 
 		if config.Log >= 0 && config.Log < time.Measured && cLogged < config.LogMax {
-			fmt.Printf("\n%d %s %s\n", res.StatusCode, method, url)
-			fmt.Printf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured)
+			logEntry := []byte(fmt.Sprintf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured))
+			logEntry = append(logEntry, []byte(fmt.Sprintf("%d %s %s\n", res.StatusCode, method, url))...)
+			logEntry = append(logEntry, []byte(fmt.Sprintf("%s\n\n", sprintJson(reqBody)))...)
+			fmt.Printf("%s", logEntry)
 		}
 	}
 
