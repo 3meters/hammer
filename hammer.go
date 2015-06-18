@@ -161,7 +161,7 @@ func main() {
 	}
 
 	// Create the hammer log file
-	hammerLog, err = os.Create("hammer.log")
+	hammerLog, err = os.OpenFile("hammer.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0664)
 	if err != nil {
 		log.Fatal("Could not create hammer.log")
 	}
@@ -433,14 +433,24 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		result.Times = append(result.Times, time)
 
 		if config.Log >= 0 && config.Log < time.Measured && cLogged < config.LogMax {
-			logEntry := []byte(fmt.Sprintf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured))
-			logEntry = append(logEntry, []byte(fmt.Sprintf("%d %s %s\n", res.StatusCode, method, url))...)
-			logEntry = append(logEntry, []byte(fmt.Sprintf("%s\n\n", sprintJson(reqBody)))...)
-			fmt.Printf("%s", logEntry)
+			logSlow(time, res.StatusCode, method, url, reqBody)
 		}
 	}
 
 	ch <- result
+}
+
+// Write slow request / responses to the hammer log
+func logSlow(time Time, statusCode int, method string, url string, reqBody []byte) {
+	logEntry := []byte(fmt.Sprintf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured))
+	logEntry = append(logEntry, []byte(fmt.Sprintf("%d %s %s\n", statusCode, method, url))...)
+	logEntry = append(logEntry, []byte(fmt.Sprintf("%s\n\n", sprintJson(reqBody)))...)
+	fmt.Printf("%s", logEntry)
+	_, err := hammerLog.Write(logEntry)
+	if (err) != nil {
+		log.Fatal("Error writing to hammer.log", err)
+	}
+	cLogged++
 }
 
 // sum: read and sum the results from a result channel
