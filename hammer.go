@@ -48,9 +48,9 @@ type Config struct {
 	Seconds     int
 	MaxProcs    int
 	RequestPath string
-	Timeout     int
-	Log         int // Log requsests taking more the Log miliseconds, -1 for no logging
-	LogMax      int // max log entries
+	LogPath     string
+	SlowMs      int
+	MaxToLog    int // max log entries
 }
 
 // These params separate test runs from each other so that
@@ -72,7 +72,7 @@ type Result struct {
 	Fail      int
 	ByteCount int64
 	Times     Times
-	Timeouts  Timeouts
+	Slow      int
 }
 
 type Time struct {
@@ -87,14 +87,6 @@ type Times []Time
 func (t Times) Len() int           { return len(t) }
 func (t Times) Swap(i, j int)      { t[j], t[i] = t[i], t[j] }
 func (t Times) Less(i, j int) bool { return t[i].Measured < t[j].Measured }
-
-type Timeout struct {
-	Tag    string
-	Method string
-	Url    string
-}
-
-type Timeouts []Times
 
 // Set command line flags
 func init() {
@@ -124,7 +116,7 @@ func main() {
 
 	fmt.Println("Reading config file " + configFileName)
 
-	content, err := ioutil.ReadFile(configFileName)
+	configBytes, err := ioutil.ReadFile(configFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -134,17 +126,17 @@ func main() {
 		Seconds:     5,
 		MaxProcs:    1,
 		RequestPath: "request.log",
-		Timeout:     0,
-		Log:         -1,
-		LogMax:      1000,
+		SlowMs:      1000,
+		MaxToLog:    1000,
 	}
 
-	err = json.Unmarshal(content, &config)
+	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		log.Fatal("Config file not valid JSON: ", err)
 	}
 
-	fmt.Printf("Config:\n%s\n", sprintJson(content))
+	configPrint := fmt.Sprintf("Config:\n%s\n", sprintJson(configBytes))
+	fmt.Print(configPrint)
 
 	// Open and parse the request log that will be fired at the target
 	requestFile, err := os.Open(config.RequestPath)
@@ -160,11 +152,18 @@ func main() {
 		log.Fatal("Error parsing "+config.RequestPath+": ", err)
 	}
 
-	// Create the hammer log file
-	hammerLog, err = os.OpenFile("hammer.log", os.O_CREATE|os.O_RDWR|os.O_APPEND, 0664)
-	if err != nil {
-		log.Fatal("Could not create hammer.log")
+	// Create the hammer log file and write the config to it
+	if config.LogPath != "" {
+		hammerLog, err = os.OpenFile(config.LogPath, os.O_CREATE|os.O_TRUNC|os.O_RDWR|os.O_APPEND, 0664)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = hammerLog.Write([]byte(fmt.Sprintf("Slow proxibase requests\n\n%s", configPrint)))
+		if err != err {
+			log.Fatal(err)
+		}
 	}
+
 	defer hammerLog.Close()
 	cLogged = 0
 
@@ -432,8 +431,11 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 		}
 		result.Times = append(result.Times, time)
 
-		if config.Log >= 0 && config.Log < time.Measured && cLogged < config.LogMax {
-			logSlow(time, res.StatusCode, method, url, reqBody)
+		if time.Measured > config.SlowMs {
+			result.Slow++
+			if config.LogPath != "" && cLogged < config.MaxToLog {
+				logSlow(time, res.StatusCode, method, url, reqBody)
+			}
 		}
 	}
 
@@ -445,7 +447,6 @@ func logSlow(time Time, statusCode int, method string, url string, reqBody []byt
 	logEntry := []byte(fmt.Sprintf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured))
 	logEntry = append(logEntry, []byte(fmt.Sprintf("%d %s %s\n", statusCode, method, url))...)
 	logEntry = append(logEntry, []byte(fmt.Sprintf("%s\n\n", sprintJson(reqBody)))...)
-	fmt.Printf("%s", logEntry)
 	_, err := hammerLog.Write(logEntry)
 	if (err) != nil {
 		log.Fatal("Error writing to hammer.log", err)
@@ -467,7 +468,7 @@ func sum(ch chan Result, expected int) {
 		total.Fail += result.Fail
 		total.ByteCount += result.ByteCount
 		total.Times = append(total.Times, result.Times...) // hmm, not sure I need the ...
-		total.Timeouts = append(total.Timeouts, result.Timeouts...)
+		total.Slow += result.Slow
 	}
 
 	close(ch)
@@ -492,7 +493,7 @@ func sum(ch chan Result, expected int) {
 	fmt.Printf("Runs: %v\n", total.Runs)
 	fmt.Printf("Requests: %v\n", total.Succede+total.Fail)
 	fmt.Printf("Errors: %v\n", total.Fail)
-	fmt.Printf("Timeouts: %v\n", len(total.Timeouts))
+	fmt.Printf("Slow: %v\n", total.Slow)
 	fmt.Printf("Fail Rate: %.2f\n", failRate)
 	fmt.Printf("KBytes per second: %v\n", total.ByteCount/int64(config.Seconds)/1000)
 	fmt.Printf("Requests per second: %v\n", (total.Succede+total.Fail)/config.Seconds)

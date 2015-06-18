@@ -14,6 +14,7 @@
   "Seconds": 30,
   "MaxProcs": 1,
   "RequestPath": "request.log",
-  "Log": -1,
-  "LogMax": 1000
+  "LogPath":  "hammer.log",
+  "SlowMs": -1,
+  "MaxToLog": 1000
 }
