@@ -23,7 +23,7 @@ import (
 )
 
 const contentJson = "application/json"
-const version = "0.1.2"
+const version = "0.1.3"
 
 var configFileName string
 var helpMe bool
@@ -179,7 +179,7 @@ func main() {
 	if config.Host == "" {
 		log.Fatalln("config.Host is required")
 	}
-	fmt.Print("Pinging " + config.Host + "... ")
+	fmt.Print("Pinging " + config.Host + " ")
 	res, err := client.Get(config.Host)
 	if err != nil {
 		log.Fatal(err)
@@ -201,7 +201,7 @@ func main() {
 	fmt.Println("Ok")
 
 	// Autheticate and add the user credentail query string to config
-	fmt.Print("Authenticating admin... ")
+	fmt.Print("Authenticating admin ")
 	config.Cred, err = authenticate(client, &config)
 	if err != nil {
 		log.Fatal(err)
@@ -213,7 +213,7 @@ func main() {
 
 	// Start the results collector service
 	ch := make(chan Result, config.Hammers)
-	go sum(ch, config.Hammers)
+	go aggregate(ch, config.Hammers)
 
 	// Start the hammers with a small stagger
 	for i := 0; i < config.Hammers; i++ {
@@ -267,10 +267,13 @@ func parseRequestLog(file *os.File) ([]Request, error) {
 
 // sprintJson: prettyPrint JSON to stdout
 func sprintJson(data []byte) string {
+	if len(data) == 0 {
+		return ""
+	}
 	var indented bytes.Buffer
 	err := json.Indent(&indented, data, "", "  ")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Fatal printing json for %v\n", data)
 	}
 	return fmt.Sprintf("%v\n", indented.String())
 }
@@ -444,6 +447,7 @@ func run(client *http.Client, requests []Request, ch chan Result) {
 
 // Write slow request / responses to the hammer log
 func logSlow(time Time, statusCode int, method string, url string, reqBody []byte) {
+
 	logEntry := []byte(fmt.Sprintf("Tag: %s, Reported: %d, Measured: %d\n", time.Tag, time.Reported, time.Measured))
 	logEntry = append(logEntry, []byte(fmt.Sprintf("%d %s %s\n", statusCode, method, url))...)
 	logEntry = append(logEntry, []byte(fmt.Sprintf("%s\n\n", sprintJson(reqBody)))...)
@@ -454,8 +458,8 @@ func logSlow(time Time, statusCode int, method string, url string, reqBody []byt
 	cLogged++
 }
 
-// sum: read and sum the results from a result channel
-func sum(ch chan Result, expected int) {
+// aggregate: read and aggregate the results from a result channel
+func aggregate(ch chan Result, expected int) {
 
 	// create an aggregate result
 	total := Result{}

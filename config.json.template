@@ -6,15 +6,15 @@
     "InstallId": "1"
   },
   "TestParams": {
-    "Seed": "310583",
-    "Lat": "72",
-    "Lng": "-25"
+    "Seed": "86809",
+    "Lat": "84",
+    "Lng": "-42"
   },
   "Hammers": 1,
   "Seconds": 30,
   "MaxProcs": 1,
   "RequestPath": "request.log",
   "LogPath":  "hammer.log",
-  "SlowMs": -1,
+  "SlowMs": 1000,
   "MaxToLog": 1000
 }
